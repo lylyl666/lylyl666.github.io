@@ -17,6 +17,14 @@ bundle exec jekyll serve
 
 访问 `http://127.0.0.1:4000/`。
 
+在带端口代理的开发环境中，使用：
+
+```bash
+./scripts/preview-proxy.sh
+```
+
+该脚本会使用代理路径构建网站，避免 CSS、图片和内部链接因根路径错误而返回 404。
+
 ## 发布策略
 
 - `main`：当前线上版本
