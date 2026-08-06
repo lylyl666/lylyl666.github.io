@@ -1,0 +1,22 @@
+title: "Yanlin Li"
+description: "Yanlin Li 的个人主页与学习博客"
+language: "zh-CN"
+lang: "zh-CN"
+timezone: "Asia/Shanghai"
+url: "https://lylyl666.github.io"
+baseurl: ""
+permalink: /posts/:title/
+markdown: kramdown
+github_username: "lylyl666"
+github_url: "https://github.com/lylyl666"
+kramdown:
+  input: GFM
+  math_engine: mathjax
+  syntax_highlighter: rouge
+exclude:
+  - README.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
+  - sarsa-lambda-github-pages-ready.zip
+  - vendor
