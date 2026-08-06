@@ -206,6 +206,8 @@ $\gamma$ 和 $\lambda$ 的作用不同：
 
 $G_t^\lambda$ 是一个综合学习目标，通常不保证等于这条轨迹的完整 $G_t$，因为较短的 n-step return 中仍包含当前可能不准确的 Q 估计。
 
+![从一步 Sarsa 到 n-step Sarsa 与 λ-return]({{ '/assets/images/image.png' | relative_url }})
+
 ---
 
 ## 8. 资格迹为什么出现
