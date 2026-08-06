@@ -1,0 +1,9 @@
+# Keep the unfinished blog source locally without publishing it.
+/_config.yml
+/_layouts/
+/_posts/
+/about.md
+/assets/
+/index.md
+/README.md
+/sarsa-lambda-github-pages-ready.zip
