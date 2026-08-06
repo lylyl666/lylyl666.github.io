@@ -70,5 +70,39 @@
       });
     }());
   </script>
+  <script>
+    (function () {
+      var titles = Array.prototype.slice.call(document.querySelectorAll('[data-fit-title]'));
+      if (!titles.length) return;
+
+      function fitTitle(title) {
+        title.style.fontSize = '';
+        title.style.whiteSpace = '';
+
+        if (window.innerWidth <= 620) return;
+
+        title.style.whiteSpace = 'nowrap';
+        var size = parseFloat(window.getComputedStyle(title).fontSize);
+        var minimum = parseFloat(title.dataset.minFontSize || '16');
+
+        while (title.scrollWidth > title.clientWidth && size > minimum) {
+          size -= 0.5;
+          title.style.fontSize = size + 'px';
+        }
+      }
+
+      function fitAllTitles() {
+        titles.forEach(fitTitle);
+      }
+
+      var resizeFrame;
+      window.addEventListener('resize', function () {
+        window.cancelAnimationFrame(resizeFrame);
+        resizeFrame = window.requestAnimationFrame(fitAllTitles);
+      });
+
+      fitAllTitles();
+    }());
+  </script>
 </body>
 </html>

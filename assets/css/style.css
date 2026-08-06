@@ -449,6 +449,10 @@ img {
   line-height: 1.35;
 }
 
+[data-fit-title] {
+  max-width: 100%;
+}
+
 .post-card h3 sub,
 .post-hero h1 sub {
   position: relative;

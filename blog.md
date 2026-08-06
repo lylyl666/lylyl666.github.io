@@ -37,7 +37,7 @@ body_class: blog-page
           </ul>
           {% endif %}
         </div>
-        <h3><a href="{{ post.url | relative_url }}">{{ post.title_html | default: post.title }}</a></h3>
+        <h3 data-fit-title data-min-font-size="16"><a href="{{ post.url | relative_url }}">{{ post.title_html | default: post.title }}</a></h3>
         <p>{{ post.excerpt | strip_html | normalize_whitespace | truncate: 150 }}</p>
       </div>
       <a class="post-arrow" href="{{ post.url | relative_url }}" aria-label="阅读《{{ post.title }}》">阅读全文 →</a>
