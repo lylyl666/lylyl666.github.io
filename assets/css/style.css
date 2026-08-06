@@ -449,6 +449,14 @@ img {
   line-height: 1.35;
 }
 
+.post-card h3 sub,
+.post-hero h1 sub {
+  position: relative;
+  bottom: -0.08em;
+  font-size: 0.58em;
+  line-height: 0;
+}
+
 .post-card h3 a {
   color: var(--text);
 }

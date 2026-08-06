@@ -1,6 +1,7 @@
 ---
 layout: post
-title: "从 Sarsa 到资格迹：我的强化学习基础总结"
+title: "从轨迹回报 Gₜ 到资格迹 / Sarsa(λ) 介绍"
+title_html: "从轨迹回报 G<sub>t</sub> 到资格迹 / Sarsa(λ) 介绍"
 date: 2026-08-06 12:00:00 +0800
 categories: [Reinforcement Learning]
 tags: [Sarsa, TD, n-step, lambda-return, eligibility-trace]
