@@ -7,6 +7,12 @@
   <title>{% if page.title and page.title != '首页' %}{{ page.title }} · {% endif %}{{ site.title }}</title>
   <meta name="description" content="{{ page.excerpt | default: site.description | strip_html | normalize_whitespace | escape }}">
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <script>
+    (function () {
+      var saved = localStorage.getItem('site-theme');
+      document.documentElement.dataset.theme = saved || 'dark';
+    }());
+  </script>
   {% if page.math %}
   <script>
     window.MathJax = {
@@ -30,14 +36,15 @@
   <a class="skip-link" href="#main-content">跳到正文</a>
   <header class="site-header">
     <div class="site-container header-inner">
-      <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="Yanlin Li 首页">
-        <span class="brand-mark">YL</span>
-        <span class="brand-name">Yanlin Li</span>
-      </a>
-      <p class="header-caption">个人主页与学习博客</p>
+      <a class="site-brand" href="{{ '/' | relative_url }}">Yanlin Li</a>
       <nav class="site-nav" aria-label="主导航">
-        <a href="{{ '/' | relative_url }}"{% if page.url == '/' %} aria-current="page"{% endif %}><span>01</span> 首页</a>
-        <a href="{{ '/blog/' | relative_url }}"{% if page.url == '/blog/' or page.layout == 'post' %} aria-current="page"{% endif %}><span>02</span> 博客</a>
+        <a href="{{ '/' | relative_url }}"{% if page.url == '/' %} aria-current="page"{% endif %}>首页</a>
+        <a href="{{ '/blog/' | relative_url }}"{% if page.url == '/blog/' or page.layout == 'post' %} aria-current="page"{% endif %}>博客</a>
+        <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="切换深浅主题" title="切换深浅主题">
+          <span class="theme-icon-light" aria-hidden="true">☀</span>
+          <span class="theme-icon-dark" aria-hidden="true">☾</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -48,10 +55,20 @@
 
   <footer class="site-footer">
     <div class="site-container footer-inner">
-      <p class="footer-edition">YANLIN LI / DIGITAL NOTEBOOK</p>
-      <p>© {{ site.time | date: '%Y' }}</p>
-      <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      <p>© {{ site.time | date: '%Y' }} Yanlin Li</p>
+      <p>Built with Jekyll &amp; GitHub Pages</p>
     </div>
   </footer>
+  <script>
+    (function () {
+      var button = document.querySelector('.theme-toggle');
+      if (!button) return;
+      button.addEventListener('click', function () {
+        var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('site-theme', next);
+      });
+    }());
+  </script>
 </body>
 </html>

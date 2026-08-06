@@ -4,34 +4,28 @@ title: 首页
 body_class: home-page
 ---
 
-<section class="profile-shell{% unless site.data.profile %} profile-only{% endunless %}" aria-labelledby="profile-name">
-  <div class="profile-kicker" aria-hidden="true">
-    <span>PROFILE</span>
-    <span>NO. 001</span>
-  </div>
-
-  <header class="profile-intro">
-    <p class="eyebrow">PERSONAL HOMEPAGE · 2026</p>
-    <h1 id="profile-name"><span>Yanlin</span> <span>Li</span></h1>
-  </header>
-
-  <div class="profile-note">
-    <p class="profile-label">ABOUT</p>
-    <p class="profile-summary">个人简介待补充</p>
-    <p class="profile-note-copy">这里将用于记录个人经历、关注方向与正在进行的工作。</p>
-
-    <div class="profile-actions">
-      <a class="editorial-link editorial-link-primary" href="{{ '/blog/' | relative_url }}">
-        <span>进入博客</span><span aria-hidden="true">↗</span>
-      </a>
-      <a class="editorial-link" href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">
-        <span>GitHub</span><span aria-hidden="true">↗</span>
-      </a>
+<section class="profile-layout" aria-labelledby="profile-name">
+  <aside class="profile-card">
+    <div class="profile-monogram" aria-hidden="true">YL</div>
+    <h1 id="profile-name">Yanlin Li</h1>
+    <p class="profile-role">个人简介待补充</p>
+    <p class="profile-location">Personal homepage &amp; learning notes</p>
+    <div class="profile-links">
+      <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+      <a href="{{ '/blog/' | relative_url }}">博客 <span aria-hidden="true">→</span></a>
     </div>
-  </div>
+  </aside>
 
-  {% if site.data.profile %}
-  <div class="profile-details">
+  <div class="profile-main">
+    <section class="content-panel intro-panel">
+      <p class="section-kicker">ABOUT</p>
+      <h2>你好，我是 Yanlin。</h2>
+      <p>个人介绍将在这里补充。这个网站用于整理个人经历、学习过程，以及强化学习相关的博客内容。</p>
+      <a class="primary-action" href="{{ '/blog/' | relative_url }}">浏览博客</a>
+    </section>
+
+    {% if site.data.profile %}
+    <div class="profile-details">
     {% if site.data.profile.education %}
     <section class="profile-section">
       <h2>教育经历</h2>
@@ -74,6 +68,7 @@ body_class: home-page
       </ul>
     </section>
     {% endif %}
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
 </section>
