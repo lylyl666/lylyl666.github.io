@@ -11,8 +11,6 @@ math: true
 
 > 这篇文章记录我从回报、价值函数和 TD，逐步学习到表格 Sarsa、n-step Sarsa、$\lambda$-return 与资格迹的过程。重点不只是罗列公式，而是解释每个概念为什么会自然地引出下一个概念。
 
-![强化学习学习主线总览]({{ '/assets/images/rl-three-lessons-overview.png' | relative_url }})
-
 ## 1. 这条学习主线在强化学习中的位置
 
 这一阶段学习的是：
