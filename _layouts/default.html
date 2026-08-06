@@ -30,10 +30,14 @@
   <a class="skip-link" href="#main-content">跳到正文</a>
   <header class="site-header">
     <div class="site-container header-inner">
-      <a class="site-brand" href="{{ '/' | relative_url }}">Yanlin Li</a>
+      <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="Yanlin Li 首页">
+        <span class="brand-mark">YL</span>
+        <span class="brand-name">Yanlin Li</span>
+      </a>
+      <p class="header-caption">个人主页与学习博客</p>
       <nav class="site-nav" aria-label="主导航">
-        <a href="{{ '/' | relative_url }}"{% if page.url == '/' %} aria-current="page"{% endif %}>首页</a>
-        <a href="{{ '/blog/' | relative_url }}"{% if page.url == '/blog/' or page.layout == 'post' %} aria-current="page"{% endif %}>博客</a>
+        <a href="{{ '/' | relative_url }}"{% if page.url == '/' %} aria-current="page"{% endif %}><span>01</span> 首页</a>
+        <a href="{{ '/blog/' | relative_url }}"{% if page.url == '/blog/' or page.layout == 'post' %} aria-current="page"{% endif %}><span>02</span> 博客</a>
       </nav>
     </div>
   </header>
@@ -44,8 +48,9 @@
 
   <footer class="site-footer">
     <div class="site-container footer-inner">
-      <p>© {{ site.time | date: '%Y' }} Yanlin Li</p>
-      <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+      <p class="footer-edition">YANLIN LI / DIGITAL NOTEBOOK</p>
+      <p>© {{ site.time | date: '%Y' }}</p>
+      <a href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </div>
   </footer>
 </body>

@@ -5,19 +5,30 @@ body_class: home-page
 ---
 
 <section class="profile-shell{% unless site.data.profile %} profile-only{% endunless %}" aria-labelledby="profile-name">
-  <aside class="profile-intro">
-    <p class="eyebrow">PERSONAL HOMEPAGE</p>
-    <h1 id="profile-name">Yanlin Li</h1>
+  <div class="profile-kicker" aria-hidden="true">
+    <span>PROFILE</span>
+    <span>NO. 001</span>
+  </div>
+
+  <header class="profile-intro">
+    <p class="eyebrow">PERSONAL HOMEPAGE · 2026</p>
+    <h1 id="profile-name"><span>Yanlin</span> <span>Li</span></h1>
+  </header>
+
+  <div class="profile-note">
+    <p class="profile-label">ABOUT</p>
     <p class="profile-summary">个人简介待补充</p>
+    <p class="profile-note-copy">这里将用于记录个人经历、关注方向与正在进行的工作。</p>
 
     <div class="profile-actions">
-      <a class="button button-primary" href="{{ '/blog/' | relative_url }}">浏览博客</a>
-      <a class="button button-secondary" href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">
-        GitHub
-        <span aria-hidden="true">↗</span>
+      <a class="editorial-link editorial-link-primary" href="{{ '/blog/' | relative_url }}">
+        <span>进入博客</span><span aria-hidden="true">↗</span>
+      </a>
+      <a class="editorial-link" href="{{ site.github_url }}" target="_blank" rel="noopener noreferrer">
+        <span>GitHub</span><span aria-hidden="true">↗</span>
       </a>
     </div>
-  </aside>
+  </div>
 
   {% if site.data.profile %}
   <div class="profile-details">

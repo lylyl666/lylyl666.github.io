@@ -6,15 +6,19 @@ body_class: blog-page
 ---
 
 <header class="page-heading">
-  <p class="eyebrow">BLOG</p>
-  <h1>博客</h1>
-  <p>按系列整理学习过程、公式推导和实践记录。</p>
+  <div class="page-heading-index">
+    <span>ARCHIVE</span>
+    <span>ISSUE 01</span>
+  </div>
+  <p class="eyebrow">LEARNING JOURNAL</p>
+  <h1>博客<span class="heading-period">.</span></h1>
+  <p>学习过程、公式推导与实践记录。</p>
 </header>
 
 <section class="series-section" aria-labelledby="rl-foundations">
   <div class="series-heading">
     <div>
-      <p class="series-label">SERIES 01</p>
+      <p class="series-label">SERIES / 01</p>
       <h2 id="rl-foundations">强化学习基础</h2>
     </div>
     <p class="series-count">
@@ -26,19 +30,22 @@ body_class: blog-page
   <div class="post-grid">
     {% for post in series_posts %}
     <article class="post-card">
-      <div class="post-card-meta">
-        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y-%m-%d" }}</time>
-        {% if post.tags %}
-        <ul class="tag-list" aria-label="博客标签">
-          {% for tag in post.tags limit: 3 %}
-          <li>{{ tag }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
+      <div class="post-number" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</div>
+      <div class="post-card-body">
+        <div class="post-card-meta">
+          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y.%m.%d" }}</time>
+          {% if post.tags %}
+          <ul class="tag-list" aria-label="博客标签">
+            {% for tag in post.tags limit: 3 %}
+            <li>{{ tag }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+        <p>{{ post.excerpt | strip_html | normalize_whitespace | truncate: 150 }}</p>
       </div>
-      <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-      <p>{{ post.excerpt | strip_html | normalize_whitespace | truncate: 150 }}</p>
-      <a class="text-link" href="{{ post.url | relative_url }}">阅读全文 <span aria-hidden="true">→</span></a>
+      <a class="post-arrow" href="{{ post.url | relative_url }}" aria-label="阅读《{{ post.title }}》">↗</a>
     </article>
     {% else %}
     <div class="empty-state">系列内容正在整理中。</div>
