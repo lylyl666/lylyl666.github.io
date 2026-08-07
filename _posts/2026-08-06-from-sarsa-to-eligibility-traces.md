@@ -228,7 +228,7 @@ Q(x2) → Q(x1) → Q(x0)
 > 我的理解：一步 Sarsa 的价值信息像接力一样逐步向前传播。面对延迟奖励时，较早动作可能需要多次访问才能获得明显更新。
 
 ![一步 Sarsa、10-step Sarsa 与 Sarsa(λ) 的轨迹更新范围对比]({{ '/assets/images/sarsa-lambda-gridworld-traces.jpg' | relative_url }})
-<p class="figure-caption">图 2：Gridworld 中一步 Sarsa、10-step Sarsa 与 Sarsa(λ) 的更新范围对比。图源：Richard S. Sutton、Andrew G. Barto，《Reinforcement Learning: An Introduction》（第 2 版），Example 12.1。</p>
+<p class="figure-caption">图 2：Gridworld 中不同算法对路径上动作价值的更新范围对比。图源：Richard S. Sutton、Andrew G. Barto，《Reinforcement Learning: An Introduction》（第 2 版），Example 12.1。</p>
 
 资格迹为每个过去访问过的状态—动作对维护一个资格值：
 
@@ -239,9 +239,6 @@ $$
 它表示这个状态—动作目前还有多少资格接收新的 TD error。
 
 当前状态—动作被访问时，资格增加；之后每经过一步，旧资格乘 $\gamma\lambda$ 衰减。因此，$\lambda$ 越大，过去状态—动作保留资格越久；$\lambda=0$ 时，过去资格立即消失，算法退化为一步 Sarsa。
-
-![TD(λ) 中资格迹传播 TD error 的后向视图]({{ '/assets/images/td-lambda-backward-view.jpg' | relative_url }})
-<p class="figure-caption">图 3：TD(λ) 的后向视图，当前 TD error 按资格迹分配给过去访问过的状态。图源：Richard S. Sutton、Andrew G. Barto，《Reinforcement Learning: An Introduction》（第 2 版），Figure 12.5。</p>
 
 Sarsa($\lambda$) 使用当前 TD error 更新所有仍有资格的状态—动作：
 
@@ -260,6 +257,9 @@ $$
 - $\alpha$：总体学习速度；
 - $\delta_t$：当前新信息与旧预测相差多少；
 - $Z_t(s,a)$：这个过去的状态—动作应该接收多少误差。
+
+![TD(λ) 中资格迹传播 TD error 的后向视图]({{ '/assets/images/td-lambda-backward-view.jpg' | relative_url }})
+<p class="figure-caption">图 3：TD(λ) 的后向视图，当前 TD error 按资格迹分配给过去访问过的状态。图源：Richard S. Sutton、Andrew G. Barto，《Reinforcement Learning: An Introduction》（第 2 版），Figure 12.5。</p>
 
 ---
 
