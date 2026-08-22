@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "从表格 Sarsa 到 True Online Sarsa(λ)：上一次学习内容整理"
-title_html: "从表格 Sarsa 到 True Online Sarsa(λ)：上一次学习内容整理"
+title: "从表格 Sarsa 到 True Online Sarsa(λ)"
+title_html: "从表格 Sarsa 到 True Online Sarsa(λ)"
 date: 2026-08-19 12:00:00 +0800
 categories: [Reinforcement Learning]
 tags: [Sarsa, function-approximation, eligibility-trace, true-online]
@@ -9,9 +9,7 @@ series: "强化学习基础"
 math: true
 ---
 
-> 本文统一采用 Sutton & Barto《Reinforcement Learning: An Introduction》中的符号习惯。
-> 本文只整理已经讲过的部分，重点停在：**为什么传统 accumulating trace 在 online 情况下不能精确匹配 online forward view**。
-> Dutch trace、$A_t$ 推导以及 $Q_{\mathrm{old}}$ correction 放到下一部分继续学习。
+> 本文重点停在：**为什么传统 accumulating trace 在 online 情况下不能精确匹配 online forward view**。
 
 ---
 
@@ -40,8 +38,6 @@ $$
 3. **在线更新时参数持续变化，为什么传统 accumulating trace 不能在一般步长下精确复现 online forward view。**
 
 ---
-
-<p class="section-kicker">PART I · 从表格到线性函数近似</p>
 
 ## 2. 为什么需要函数近似
 
@@ -166,7 +162,7 @@ $$
 
 我的理解是：
 
-> 共享参数的意义不是单纯换一种方式保存 Q，而是用有限参数表达大量状态—动作之间的共同结构。
+<span style="color:#d1242f"><strong>共享参数的意义不是单纯换一种方式保存 Q，而是用有限参数表达大量状态—动作之间的共同结构。</strong></span>
 
 ---
 
@@ -344,13 +340,11 @@ $$
 
 因此：
 
-> 半梯度只是当前求导时不沿 bootstrap target 求导，并不意味着 target 中的价值估计在后续参数更新后保持不变。
+<span style="color:#d1242f"><strong>半梯度只是当前求导时不沿 bootstrap target 求导，并不意味着 target 中的价值估计在后续参数更新后保持不变。</strong></span>
 
 这也为后面 True Online 中的 online prediction drift 埋下了伏笔。
 
 ---
-
-<p class="section-kicker">PART II · 函数近似下的资格迹</p>
 
 ## 4. 从表格资格迹到参数资格迹
 
@@ -464,7 +458,7 @@ $$
 
 更准确地说：
 
-> $\mathbf z_t$ 是参数空间中的向量，它压缩记录当前和过去预测梯度的衰减历史，并决定当前 TD error 沿哪些参数方向产生多大影响。
+<span style="color:#d1242f"><strong>$\mathbf z_t$ 是参数空间中的向量，它压缩记录当前和过去预测梯度的衰减历史，并决定当前 TD error 沿哪些参数方向产生多大影响。</strong></span>
 
 ---
 
@@ -594,8 +588,6 @@ $$
 
 ---
 
-<p class="section-kicker">PART III · 为什么需要 True Online</p>
-
 ## 6. Online 参数更新破坏了“看起来完全相同的 Q”
 
 一开始推导 forward / backward view 时，我看到望远镜消除中一正一负、形式相同的价值估计，很容易认为：
@@ -654,7 +646,7 @@ $$
 
 因此：
 
-> 看到两个代数形式相同的 $\hat q(S_t,A_t)$，不能立刻认为它们是同一个数，必须检查它们分别由哪一组参数计算。
+<span style="color:#d1242f"><strong>看到两个代数形式相同的 $\hat q(S_t,A_t)$，不能立刻认为它们是同一个数，必须检查它们分别由哪一组参数计算。</strong></span>
 
 这是我之前理解 forward / backward equivalence 时忽略的一点：
 
@@ -798,6 +790,8 @@ $$
 
 在一般有限步长下，两者不能严格一致。
 
+<span style="color:#d1242f"><strong>关键矛盾不在于 TD error 是否被重新计算，而在于传统资格迹没有完整追踪在线参数变化对历史 credit 的影响。</strong></span>
+
 ![Mountain Car 上 True Online Sarsa(lambda) 与常规 Sarsa(lambda) 的性能对比]({{ '/assets/images/true-online-sarsa-mountain-car-comparison.jpg' | relative_url }})
 <p class="figure-caption">图 4：Mountain Car 上多种 Sarsa(λ) 的早期性能对比。True Online Sarsa(λ) 在该实验中优于使用 accumulating traces 和 replacing traces 的常规版本，为下一部分引入精确匹配 online forward view 的修正提供了经验动机。图源：Richard S. Sutton、Andrew G. Barto，《Reinforcement Learning: An Introduction》（第 2 版），Figure 12.11。</p>
 
@@ -892,25 +886,35 @@ $$
 
 ## 9. 这一阶段的总结
 
-1. 表格 Sarsa 直接学习每个独立的 $Q(s,a)$，但面对连续或大规模状态空间时缺乏可扩展性和泛化能力。
+**1. 从独立表项到共享参数**
 
-2. 线性函数近似改为：
+表格 Sarsa 为每个状态—动作对单独学习 $Q(s,a)$。这种表示清晰直接，但面对连续或大规模状态空间时，既难以存储，也无法自然地在相似状态之间泛化。
+
+线性函数近似把动作价值写成：
 
 $$
 \hat q(s,a,\mathbf w)
 =
-\mathbf w^\top\mathbf x(s,a),
+\mathbf w^\top\mathbf x(s,a).
 $$
 
-用共享参数和特征来表示动作价值。
+特征 $\mathbf x(s,a)$ 描述状态—动作，参数 $\mathbf w$ 则在不同状态—动作之间共享。这样既产生了泛化，也可能带来相互干扰。
 
-3. 半梯度 Sarsa 使用：
+**2. 半梯度 Sarsa：沿当前预测方向更新**
+
+一步 TD error 为：
 
 $$
 \delta_t
+=
+R_{t+1}
++
+\gamma\hat q(S_{t+1},A_{t+1},\mathbf w_t)
+-
+\hat q(S_t,A_t,\mathbf w_t).
 $$
 
-更新当前预测对应的参数方向：
+半梯度方法在当前这一步把 bootstrap target 当作固定参考，只沿当前预测的梯度方向更新。在线性函数近似下：
 
 $$
 \mathbf w_{t+1}
@@ -918,35 +922,43 @@ $$
 \mathbf w_t+\alpha\delta_t\mathbf x_t.
 $$
 
-4. Sarsa($\lambda$) 使用参数资格迹：
+**3. 资格迹：保存历史参数方向**
 
-$$
-\mathbf z_t
-$$
-
-保存当前和过去梯度方向的衰减历史，使当前 TD error 能够更快地进行 credit assignment。
-
-5. traditional accumulating trace：
+Sarsa($\lambda$) 使用参数资格迹：
 
 $$
 \mathbf z_t
 =
 \gamma\lambda\mathbf z_{t-1}
 +
-\mathbf x_t
+\mathbf x_t,
 $$
 
-只显式考虑历史 credit 的时间衰减。
+把当前与过去预测梯度的衰减历史压缩到一个向量中。当前 TD error 再通过 $\mathbf z_t$ 影响仍保有 credit 的参数方向，从而更快地完成延迟 credit assignment。
 
-6. 但在真正的 online 学习中：
+**4. 传统 accumulating trace 记录了什么**
+
+传统 accumulating trace 显式记录的是历史梯度按 $\gamma\lambda$ 产生的时间衰减。它能够高效实现传统 backward view，但递推式本身没有完整编码轨迹中每次在线参数更新造成的 prediction drift。
+
+**5. Online mismatch 从哪里产生**
+
+在真正的在线学习中，参数沿轨迹持续变化：
 
 $$
-\mathbf w_t
+\mathbf w_0
+\rightarrow
+\mathbf w_1
+\rightarrow
+\mathbf w_2
+\rightarrow
+\cdots
 $$
 
-会持续变化，共享参数意味着过去的更新会提前改变当前和未来 prediction。
+由于参数是共享的，过去的更新会提前改变当前与未来状态—动作的 prediction。因此，即使两个价值估计写成同样的 $\hat q(S_t,A_t)$，只要参数版本不同，它们就不一定相等。
 
-7. 因此 traditional accumulating backward view 一般不能在有限步长下精确复现 online forward view。
+**6. 这一阶段的核心结论**
+
+<span style="color:#d1242f"><strong>在一般有限步长下，traditional accumulating backward view 不能精确复现 online forward view；要实现真正的 online equivalence，还需要修正资格迹和参数更新。</strong></span>
 
 ---
 
@@ -956,20 +968,8 @@ $$
 
 > **既然历史 credit 从过去传到当前时，不只是按 $\gamma\lambda$ 做时间衰减，还会受到中间 online 参数更新的影响，那么“正确的 online 资格迹”应该怎样递推？**
 
-下一部分将从这个问题出发，继续推导：
+下一部分将沿着这条问题链继续：
 
-$$
-\boxed{
-\text{Dutch trace}
-}
-$$
-
-以及之后的：
-
-$$
-\boxed{
-Q_{\mathrm{old}}\text{ correction}
-}
-$$
-
-从而最终得到 True Online Sarsa($\lambda$)。
+- Dutch trace 如何修正传统资格迹；
+- $Q_{\mathrm{old}}$ correction 为什么会出现在参数更新中；
+- 两项修正如何组合成 True Online Sarsa($\lambda$)，并精确对应 online forward view。
