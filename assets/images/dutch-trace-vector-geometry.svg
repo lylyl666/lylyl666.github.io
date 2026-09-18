@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">Dutch trace 的向量几何分解</title>
+  <desc id="desc">三幅图依次展示历史资格向量相对当前特征方向的平行与垂直分解、矩阵 M_t 只缩放平行分量，以及乘以 gamma lambda 后加上当前特征得到新资格迹。</desc>
+  <defs>
+    <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#0f766e"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#ea580c"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#15803d"/>
+    </marker>
+    <style>
+      .panel { fill: #f8fafc; stroke: #dbe4ee; stroke-width: 1.5; }
+      .axis { stroke: #94a3b8; stroke-width: 1.6; marker-end: url(#arrow-slate); }
+      .guide { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 6 6; fill: none; }
+      .old { stroke: #64748b; stroke-width: 3; stroke-dasharray: 7 6; fill: none; marker-end: url(#arrow-slate); }
+      .teal { stroke: #0f766e; stroke-width: 4; fill: none; marker-end: url(#arrow-teal); }
+      .orange { stroke: #ea580c; stroke-width: 4; fill: none; marker-end: url(#arrow-orange); }
+      .orange-dash { stroke: #ea580c; stroke-width: 3; stroke-dasharray: 7 6; fill: none; marker-end: url(#arrow-orange); }
+      .purple { stroke: #7c3aed; stroke-width: 4; fill: none; marker-end: url(#arrow-purple); }
+      .green { stroke: #15803d; stroke-width: 4.5; fill: none; marker-end: url(#arrow-green); }
+      .heading { font: 700 20px Arial, "Noto Sans CJK SC", sans-serif; fill: #0f172a; }
+      .label { font: 18px Arial, "Noto Sans CJK SC", sans-serif; fill: #0f172a; }
+      .small { font: 15px Arial, "Noto Sans CJK SC", sans-serif; fill: #475569; }
+      .math { font: italic 19px "Times New Roman", "STIX Two Math", serif; fill: #0f172a; }
+      .formula { font: 21px "Times New Roman", "STIX Two Math", serif; fill: #0f172a; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="1198" height="498" rx="18" fill="#ffffff" stroke="#dbe4ee" stroke-width="2"/>
+  <text x="600" y="36" text-anchor="middle" class="heading">Dutch trace：历史资格如何穿过当前在线更新</text>
+
+  <rect class="panel" x="22" y="56" width="365" height="360" rx="14"/>
+  <text x="204" y="88" text-anchor="middle" class="heading">1　相对 xₜ 分解历史资格</text>
+  <line class="axis" x1="74" y1="332" x2="350" y2="332"/>
+  <line class="axis" x1="74" y1="332" x2="74" y2="112"/>
+  <line class="teal" x1="74" y1="332" x2="302" y2="145"/>
+  <line class="orange" x1="74" y1="332" x2="302" y2="332"/>
+  <line class="purple" x1="302" y1="332" x2="302" y2="145"/>
+  <path class="guide" d="M291 332 L291 321 L302 321"/>
+  <text x="312" y="138" class="math">zₜ₋₁</text>
+  <text x="180" y="358" class="math" fill="#ea580c">z∥</text>
+  <text x="310" y="239" class="math" fill="#7c3aed">z⊥</text>
+  <text x="326" y="319" class="math" fill="#ea580c">xₜ</text>
+  <text x="204" y="394" text-anchor="middle" class="small">zₜ₋₁ = z∥ + z⊥，且 xₜᵀz⊥ = 0</text>
+
+  <rect class="panel" x="417" y="56" width="365" height="360" rx="14"/>
+  <text x="599" y="88" text-anchor="middle" class="heading">2　Mₜ 只调整平行分量</text>
+  <line class="axis" x1="467" y1="332" x2="744" y2="332"/>
+  <line class="axis" x1="467" y1="332" x2="467" y2="112"/>
+  <line class="old" x1="467" y1="332" x2="704" y2="145"/>
+  <line class="guide" x1="704" y1="332" x2="704" y2="145"/>
+  <line class="green" x1="467" y1="332" x2="626" y2="145"/>
+  <line class="orange" x1="467" y1="332" x2="626" y2="332"/>
+  <line class="purple" x1="626" y1="332" x2="626" y2="145"/>
+  <path class="guide" d="M615 332 L615 321 L626 321"/>
+  <text x="707" y="137" class="small">原 zₜ₋₁</text>
+  <text x="632" y="137" class="math" fill="#15803d">Mₜzₜ₋₁</text>
+  <text x="530" y="358" class="math" fill="#ea580c">c z∥</text>
+  <text x="634" y="239" class="math" fill="#7c3aed">z⊥ 不变</text>
+  <text x="599" y="381" text-anchor="middle" class="small">c = 1 − α‖xₜ‖²（图中 0 &lt; c &lt; 1）</text>
+  <text x="599" y="402" text-anchor="middle" class="small">Mₜzₜ₋₁ = c z∥ + z⊥</text>
+
+  <rect class="panel" x="812" y="56" width="365" height="360" rx="14"/>
+  <text x="994" y="88" text-anchor="middle" class="heading">3　衰减后加入当前特征</text>
+  <line class="axis" x1="852" y1="332" x2="1142" y2="332"/>
+  <line class="axis" x1="852" y1="332" x2="852" y2="112"/>
+  <line class="teal" x1="852" y1="332" x2="948" y2="222"/>
+  <line class="orange" x1="852" y1="332" x2="1007" y2="332"/>
+  <line class="orange-dash" x1="948" y1="222" x2="1103" y2="222"/>
+  <line class="green" x1="852" y1="332" x2="1103" y2="222"/>
+  <line class="guide" x1="1007" y1="332" x2="1103" y2="222"/>
+  <text x="865" y="214" class="small">γλMₜzₜ₋₁</text>
+  <text x="928" y="358" class="math" fill="#ea580c">xₜ</text>
+  <text x="1016" y="209" class="small" fill="#ea580c">+ xₜ</text>
+  <text x="1109" y="215" class="math" fill="#15803d">zₜ</text>
+  <text x="994" y="389" text-anchor="middle" class="small">平行与垂直历史分量先共同乘以 γλ</text>
+
+  <text x="600" y="462" text-anchor="middle" class="formula">zₜ = xₜ + γλ Mₜ zₜ₋₁ = xₜ + γλ[(1 − α‖xₜ‖²)z∥ + z⊥]</text>
+</svg>
