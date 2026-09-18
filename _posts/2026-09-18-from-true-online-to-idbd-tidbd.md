@@ -194,8 +194,6 @@ $$
 ![向量在一维子空间上的正交投影与正交残差]({{ '/assets/images/orthogonal-projection-one-dimensional-subspace.jpg' | relative_url }})
 <p class="figure-caption">图 1：向量在一维子空间上的正交投影。左图的 $\pi_U(\mathbf x)$ 是沿基向量 $\mathbf b$ 的平行分量，红色虚线是与该子空间正交的残差；右图用 $\cos\omega$ 与 $\sin\omega$ 展示同一分解。图源：Deisenroth、Faisal 与 Ong，《Mathematics for Machine Learning》（2020），Figure 3.10 [5]。</p>
 
-需要特别说明：教材图只提供标准的正交投影几何。下面把“投影分解、$\mathbf M_t$ 对平行分量的调整、$\gamma\lambda$ 衰减以及加入当前 $\mathbf x_t$”串成一个过程，**是我在推导 Dutch trace 时形成的理解，不是教材或论文中的原句。**
-
 现在看之前出现的矩阵乘积：
 
 $$
@@ -324,53 +322,108 @@ $$
 
 ## 3. $Q_{\mathrm{old}}$ correction：资格迹改了，为什么参数更新还需要修正？
 
-Dutch trace 改的是**历史资格怎样传播**。还有一个不同的问题：在相邻时间步中，**同一个状态—动作对**可能已经因为参数更新而改变预测。
+Dutch trace 只回答了**历史资格怎样穿过连续的在线更新**，还没有给出完整的权重更新式。缺少的部分来自另一个事实：在相邻两步之间，参数已经更新过，因此**同一个状态—动作对的预测基准也可能变了**。
 
-例如，时刻 $t-1$ 将即将到达的状态—动作对作为 next-Q 计算时，有
+下面分三步看完整式子从哪里来。
 
-$$
-Q_{\mathrm{old}}=0.50.
-$$
+### 3.1 先找出预测基准移动了多少
 
-上一时刻更新 $\mathbf w$ 后，来到当前 $(S_t,A_t)$，重新计算得到
+在时刻 $t-1$，算法已经观察到下一对 $(S_t,A_t)$，但尚未完成上一轮权重更新。把当时的预测保存为
 
 $$
-Q_t=0.69,
-\qquad Q_t-Q_{\mathrm{old}}=0.19.
+Q_{\mathrm{old}}
+=\hat q(S_t,A_t,\mathbf w_{t-1}).
 $$
 
-这里比较的是**同一个 $(S_t,A_t)$、两套参数版本**，不是把当前 Q 与下一状态 Q 相减。$0.19$ 是参数更新造成的 prediction drift。
+上一轮更新完成后，参数变成 $\mathbf w_t$。此时对**同一个** $(S_t,A_t)$ 再预测一次：
 
-在线性 True Online Sarsa($\lambda$) 中，完整权重更新可写为
+$$
+Q_t=\hat q(S_t,A_t,\mathbf w_t).
+$$
+
+两者之差
+
+$$
+\boxed{d_t\doteq Q_t-Q_{\mathrm{old}}}
+$$
+
+就是上一轮在线更新造成的 prediction drift。例如 $Q_{\mathrm{old}}=0.50$、$Q_t=0.69$ 时，$d_t=0.19$。这里比较的是同一个状态—动作对在两套参数下的预测，不是当前 Q 与下一状态 Q 的差。
+
+### 3.2 把 TD error 改写到旧预测基准上
+
+记本轮 Sarsa target 为
+
+$$
+Y_t=R_{t+1}+\gamma
+\hat q(S_{t+1},A_{t+1},\mathbf w_t),
+$$
+
+终止状态的 bootstrap 项取 $0$。通常的 TD error 是
+
+$$
+\delta_t=Y_t-Q_t.
+$$
+
+如果改用上一轮保存的预测 $Q_{\mathrm{old}}$ 作为基准，那么残差为
+
+$$
+\begin{aligned}
+Y_t-Q_{\mathrm{old}}
+&=(Y_t-Q_t)+(Q_t-Q_{\mathrm{old}})\\
+&=\delta_t+d_t.
+\end{aligned}
+$$
+
+所以式子中的 $\delta_t+Q_t-Q_{\mathrm{old}}$ 并不是额外定义的新误差；它只是**把当前 TD error 换回旧预测基准后得到的同一个差值**。
+
+### 3.3 为什么还要减去 $d_t\mathbf x_t$？
+
+严格地说，下面的更新式来自把 online forward view 逐时展开，再用 Dutch trace 消去反复计算得到的 backward view。[1] 这里不重复整段证明，而是利用前面的向量分解说明：**为什么等价式里必然同时出现 $+d_t\mathbf z_t$ 和 $-d_t\mathbf x_t$，而不是只给 TD error 多加一个 $d_t$。**
+
+Dutch trace 可以写成
+
+$$
+\mathbf z_t
+=\underbrace{\mathbf x_t}_{\text{当前资格}}
++\underbrace{(\mathbf z_t-\mathbf x_t)}_{\text{调整后保留下来的历史资格}}.
+$$
+
+$d_t$ 描述的是当前样本到来**之前**，旧参数更新对当前预测造成的漂移。因此它应当补偿已经从过去传来的资格，而不应再次算到刚加入的当前资格 $\mathbf x_t$ 上。于是 correction 是
+
+$$
+\alpha d_t(\mathbf z_t-\mathbf x_t),
+$$
+
+而基本的 TD 更新仍是 $\alpha\delta_t\mathbf z_t$。两者相加，才得到完整更新：
 
 $$
 \boxed{
 \mathbf w_{t+1}
-=\mathbf w_t+\alpha\delta_t\mathbf z_t
+=\mathbf w_t
++\alpha\delta_t\mathbf z_t
 +\alpha(Q_t-Q_{\mathrm{old}})(\mathbf z_t-\mathbf x_t)
 }.
 $$
 
-等价地，
+展开 correction，也可以写成教材伪代码中的形式：
 
 $$
+\boxed{
 \mathbf w_{t+1}
 =\mathbf w_t
 +\alpha(\delta_t+Q_t-Q_{\mathrm{old}})\mathbf z_t
--\alpha(Q_t-Q_{\mathrm{old}})\mathbf x_t.
+-\alpha(Q_t-Q_{\mathrm{old}})\mathbf x_t
+}.
 $$
 
-这里的 TD error 为
+现在两个看似突然出现的项就有了各自的来源：
 
-$$
-\delta_t=R_{t+1}
-+\gamma\hat q(S_{t+1},A_{t+1},\mathbf w_t)
--\hat q(S_t,A_t,\mathbf w_t),
-$$
+- $+(Q_t-Q_{\mathrm{old}})\mathbf z_t$：把预测基准的漂移沿完整资格迹传播；
+- $-(Q_t-Q_{\mathrm{old}})\mathbf x_t$：扣除刚加入的当前资格，避免把过去造成的漂移再记到当前样本一次。
 
-终止状态的 bootstrap 项取 $0$。每次更新前，在旧参数 $\mathbf w_t$ 下先得到下一状态—动作对的预测，并在当前更新后将其保存为下一步使用的 $Q_{\mathrm{old}}$。
+还可以做两个快速自检：当 $Q_t=Q_{\mathrm{old}}$ 时没有 prediction drift，correction 自动消失；当 $\lambda=0$ 时 $\mathbf z_t=\mathbf x_t$，correction 同样消失，更新退回普通的一步 Sarsa。
 
-两项修正的分工可以压缩为：
+因此，两项修正的分工可以压缩为：
 
 - **Dutch trace：** 历史 credit 穿过当前在线更新时应如何累计。
 - **$Q_{\mathrm{old}}$ correction：** 同一个当前预测在两次参数版本之间已经发生多少漂移，如何在更新式中正确补偿。
@@ -560,9 +613,22 @@ $$
 
 ---
 
-## 7. 从 IDBD 到 TIDBD(0)：把固定 target 换成 bootstrap target
+## 7. 从 IDBD 到 TIDBD(0)：到底增加了什么？
 
-前面是监督学习 $\delta_t=y_t-\hat y_t$。TIDBD 把独立步长适应移到 TD learning。这里需要**明确切换任务**：原始 TIDBD 的基本公式是状态价值预测，定义
+先给结论：**TIDBD(0) 没有在 IDBD 上突然增加一套新的步长变量。它保留了 $\beta_i$、$\alpha_i=e^{\beta_i}$ 和敏感度 $h_i$，真正改变的是产生学习信号的任务：从有固定标签的监督预测，变成用下一状态估计值构造 target 的 TD 预测。**
+
+当 $\lambda>0$ 时，算法才会进一步加入资格迹 $z_i$，把一次 TD error 分配给过去访问过的特征；这是下一节的内容。
+
+### 7.1 第一处变化：真实标签变成 bootstrap target
+
+IDBD 在每一步拿到监督目标 $y_t$，误差为
+
+$$
+\delta_t^{\mathrm{IDBD}}
+=y_t-\mathbf w_t^\top\mathbf x_t.
+$$
+
+TD prediction 没有现成的 $y_t$。环境只给出转移 $(S_t,R_{t+1},S_{t+1})$，所以 TIDBD 用“即时奖励 + 下一状态的当前估计”构造 target。原始 TIDBD 的基本公式是状态价值预测，定义
 
 $$
 \hat v(S_t,\mathbf w_t)=\mathbf w_t^\top\mathbf x_t,
@@ -570,19 +636,21 @@ $$
 \mathbf x_t\doteq\mathbf x(S_t).
 $$
 
-TD error 为
+对应的 bootstrap target 和 TD error 分别为
 
 $$
-\boxed{
-\delta_t=R_{t+1}
-+\gamma\mathbf w_t^\top\mathbf x_{t+1}
--\mathbf w_t^\top\mathbf x_t
-}.
+Y_t^{\mathrm{TD}}
+=R_{t+1}+\gamma\mathbf w_t^\top\mathbf x_{t+1},
+\qquad
+\boxed{\delta_t^{\mathrm{TD}}
+=Y_t^{\mathrm{TD}}-\mathbf w_t^\top\mathbf x_t}.
 $$
 
-和监督学习的区别是：$R_{t+1}+\gamma\hat v(S_{t+1},\mathbf w_t)$ 这个 **bootstrap target 本身依赖 $\mathbf w_t$**。
+两者最关键的差别是：$y_t$ 由数据直接给定，而 $Y_t^{\mathrm{TD}}$ 包含 $\mathbf w_t^\top\mathbf x_{t+1}$，会随权重一起移动。
 
-TIDBD 使用 semi-gradient：在本轮优化时把 bootstrap target 视为固定参考，不沿 target 一侧继续求导。因此，结合前面的对角近似，仍采用
+### 7.2 第二处变化：对移动的 target 使用 semi-gradient
+
+如果沿 TD error 的两侧完整求导，下一状态预测也会产生梯度。TIDBD 沿用 TD 学习中的 semi-gradient 选择：本轮更新时把 $Y_t^{\mathrm{TD}}$ 当成暂时固定的参考，只对当前预测 $\mathbf w_t^\top\mathbf x_t$ 求导。结合 IDBD 已经采用的对角近似，有
 
 $$
 \frac{\partial\delta_t}{\partial\beta_i}
@@ -591,7 +659,9 @@ $$
 \boxed{\Delta\beta_i=\theta\delta_tx_{i,t}h_{i,t}}.
 $$
 
-这不是完整 TD-error 平方损失的真实全梯度，而是**semi-gradient meta-update**。它的更新形式接近 IDBD，但优化问题已经变成有 bootstrap target 的 TD prediction。[3]
+这不是 TD-error 平方的完整梯度，而是 **semi-gradient meta-update**。选择它的原因并不是形式更简洁，而是 TIDBD 要适配的正是以 bootstrap target 为学习信号的 TD 更新。[3]
+
+### 7.3 在 $\lambda=0$ 时，哪些式子变了，哪些没变？
 
 当 $\lambda=0$ 时，$\mathbf z_t=\mathbf x_t$，因此
 
@@ -599,7 +669,25 @@ $$
 w_{i,t+1}=w_{i,t}+\alpha_i\delta_tx_{i,t}.
 $$
 
-从**更新形式**上说，TIDBD(0) 可理解为“IDBD + TD error”；但两者的 target 定义、依赖关系及算法性质并不等同。
+此时 $h_i$ 的递推仍为
+
+$$
+h_{i,t+1}
+=h_{i,t}[1-\alpha_ix_{i,t}^2]^+
++\alpha_i\delta_tx_{i,t}.
+$$
+
+因此从 IDBD 到 TIDBD(0) 的变化可以明确列成：
+
+| 比较项 | IDBD | TIDBD(0) | 为什么改变 |
+|:---|:---|:---|:---|
+| 学习数据 | $(\mathbf x_t,y_t)$ | $(S_t,R_{t+1},S_{t+1})$ | 强化学习没有直接给出的真实标签 |
+| target | $y_t$ | $R_{t+1}+\gamma\hat v(S_{t+1},\mathbf w_t)$ | 用下一状态预测进行 bootstrap |
+| 权重 credit | $x_{i,t}$ | $x_{i,t}$ | $\lambda=0$ 时只更新当前特征 |
+| 步长参数 | $\alpha_i=e^{\beta_i}$ | 保持不变 | 继续为每个 feature 学习独立步长 |
+| meta 信号 | $\delta_tx_{i,t}h_{i,t}$ | 形式保持不变，但 $\delta_t$ 换成 TD error | 对移动 target 采用 semi-gradient |
+
+所以，“TIDBD(0) = IDBD + TD error”只能作为记忆骨架：它们共享同一套逐特征步长适应器，但误差的来源、target 对参数的依赖以及梯度的含义已经改变。**TIDBD 中的 TD，增加的是 temporal-difference 学习问题；到了 TIDBD($\lambda$)，才再增加跨时间分配 credit 的资格迹。**
 
 “每个 feature 有自己的 $\alpha_i$”不只是记号变化。TIDBD 原论文在 Mountain Car 预测实验中同时加入任务相关特征与随机噪声特征：相关特征的步长随学习明显增大，而无关特征的步长保持在较小水平。这给出了一个很直观的结果——独立步长适应也在进行一种简单的 representation learning。[3]
 
@@ -610,7 +698,7 @@ $$
 
 ## 8. TIDBD($\lambda$)：为什么权重用 $z_i$，步长却用 $x_ih_i$？
 
-当 $\lambda>0$ 时，TIDBD 使用 accumulating eligibility trace：
+从 TIDBD(0) 走到 TIDBD($\lambda$)，这一步才真正新增了状态变量：**资格迹 $z_i$**。原因是当前 TD error 不仅应更新当前特征，还应按照最近访问的程度给过去特征分配 temporal credit。TIDBD 使用 accumulating eligibility trace：
 
 $$
 \boxed{z_{i,t}=\gamma\lambda z_{i,t-1}+x_{i,t}}.
@@ -622,13 +710,34 @@ $$
 \boxed{w_{i,t+1}=w_{i,t}+\alpha_i\delta_tz_{i,t}}.
 $$
 
-这时三个量必须分开：
+这时三个量各有一个明确角色，不能因为它们都带下标 $i$ 就混在一起：
 
-| 量 | 它回答的问题 |
-|---|---|
-| $x_{i,t}$ | 当前状态的预测依赖 $w_i$ 多少？ |
-| $z_{i,t}$ | 这次 TD error 应该给过去的 $w_i$ 分配多少资格？ |
-| $h_{i,t}$ | 过去稍微调整 $\beta_i$，今天的 $w_i$ 将怎样变化？ |
+<table>
+  <thead>
+    <tr>
+      <th>符号</th>
+      <th>名称</th>
+      <th>它回答的问题</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>$x_{i,t}$</td>
+      <td>当前特征</td>
+      <td>当前状态的预测依赖 $w_i$ 多少？</td>
+    </tr>
+    <tr>
+      <td>$z_{i,t}$</td>
+      <td>资格迹</td>
+      <td>这次 TD error 应给过去的 $w_i$ 分配多少 credit？</td>
+    </tr>
+    <tr>
+      <td>$h_{i,t}$</td>
+      <td>步长敏感度</td>
+      <td>过去稍微调整 $\beta_i$，现在的 $w_i$ 会怎样变化？</td>
+    </tr>
+  </tbody>
+</table>
 
 ### 8.1 一个两状态的数值例子
 
@@ -675,7 +784,13 @@ $$
 w_{i,t+1}=w_{i,t}+e^{\beta_i}\delta_tz_{i,t}.
 $$
 
-普通 accumulating trace 由输入、$\gamma$、$\lambda$ 递推，本身不显式依赖步长，因此在当前推导中 $\partial z_{i,t}/\partial\beta_i=0$。对 $\beta_i$ 求导并利用乘积法则：
+这里采用的普通 accumulating trace 只由输入、$\gamma$ 和 $\lambda$ 递推，不显式包含步长 $\alpha_i=e^{\beta_i}$。因此在当前推导中
+
+$$
+\frac{\partial z_{i,t}}{\partial\beta_i}=0.
+$$
+
+接下来对 $\beta_i$ 求导并使用乘积法则：
 
 $$
 \begin{aligned}
