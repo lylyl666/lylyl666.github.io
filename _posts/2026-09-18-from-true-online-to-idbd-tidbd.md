@@ -663,31 +663,70 @@ $$
 
 ### 7.3 在 $\lambda=0$ 时，哪些式子变了，哪些没变？
 
-当 $\lambda=0$ 时，$\mathbf z_t=\mathbf x_t$，因此
+先抓住一句话：**从 IDBD 到 TIDBD(0)，替换的是误差 $\delta_t$ 的来源，而不是整套逐特征步长适应器。**
+
+两种误差可以直接对照。IDBD 的 target 是外部给定的标签：
 
 $$
-w_{i,t+1}=w_{i,t}+\alpha_i\delta_tx_{i,t}.
+\underbrace{y_t}_{\text{监督标签}}
+\quad\longrightarrow\quad
+\delta_t^{\mathrm{IDBD}}
+=y_t-\hat y_t.
 $$
 
-此时 $h_i$ 的递推仍为
+TIDBD(0) 则先用奖励和下一状态估计构造 bootstrap target：
 
 $$
+\begin{aligned}
+Y_t^{\mathrm{TD}}
+&=R_{t+1}+\gamma\hat v(S_{t+1},\mathbf w_t),\\
+\delta_t^{\mathrm{TD}}
+&=Y_t^{\mathrm{TD}}-\hat v(S_t,\mathbf w_t).
+\end{aligned}
+$$
+
+真正发生变化的只有下面三层。表中不再放推导公式，只比较概念：
+
+| 变化层次 | IDBD | TIDBD(0) |
+|:---|:---|:---|
+| 样本告诉算法什么 | 当前特征和监督标签 | 当前状态、奖励与下一状态 |
+| target 从哪里来 | 数据直接给定，训练时固定 | 奖励加下一状态预测，会随权重移动 |
+| target 一侧如何求导 | 标签是常量，无须考虑其导数 | 暂时固定 bootstrap target，使用 semi-gradient |
+
+而下面这套**步长适应骨架保持不变**：
+
+- 每个 feature 都有自己的正步长 $\alpha_i=e^{\beta_i}$；
+- 都用 $h_i$ 记录权重对 $\beta_i$ 的近似敏感度；
+- meta-update 的外形仍是 $\Delta\beta_i=\theta\delta_tx_{i,t}h_{i,t}$。
+
+需要注意的是，最后一个式子的外形虽相同，其中 $\delta_t$ 已经从监督残差换成了 TD error。
+
+当 $\lambda=0$ 时还没有跨时间的资格传播，$\mathbf z_t=\mathbf x_t$。所以权重和敏感度仍按当前特征更新：
+
+$$
+\begin{aligned}
+w_{i,t+1}
+&=w_{i,t}+\alpha_i\delta_tx_{i,t},\\
 h_{i,t+1}
-=h_{i,t}[1-\alpha_ix_{i,t}^2]^+
+&=h_{i,t}[1-\alpha_ix_{i,t}^2]^+
 +\alpha_i\delta_tx_{i,t}.
+\end{aligned}
 $$
 
-因此从 IDBD 到 TIDBD(0) 的变化可以明确列成：
+最后把算法演进压缩成一条线：
 
-| 比较项 | IDBD | TIDBD(0) | 为什么改变 |
-|:---|:---|:---|:---|
-| 学习数据 | $(\mathbf x_t,y_t)$ | $(S_t,R_{t+1},S_{t+1})$ | 强化学习没有直接给出的真实标签 |
-| target | $y_t$ | $R_{t+1}+\gamma\hat v(S_{t+1},\mathbf w_t)$ | 用下一状态预测进行 bootstrap |
-| 权重 credit | $x_{i,t}$ | $x_{i,t}$ | $\lambda=0$ 时只更新当前特征 |
-| 步长参数 | $\alpha_i=e^{\beta_i}$ | 保持不变 | 继续为每个 feature 学习独立步长 |
-| meta 信号 | $\delta_tx_{i,t}h_{i,t}$ | 形式保持不变，但 $\delta_t$ 换成 TD error | 对移动 target 采用 semi-gradient |
+$$
+\begin{aligned}
+\boxed{\text{IDBD}}
+&\xrightarrow{\text{监督标签换成 bootstrap target}}
+\boxed{\text{TIDBD}(0)},\\[4pt]
+\boxed{\text{TIDBD}(0)}
+&\xrightarrow{\text{加入资格迹 }\mathbf z_t}
+\boxed{\text{TIDBD}(\lambda)}.
+\end{aligned}
+$$
 
-所以，“TIDBD(0) = IDBD + TD error”只能作为记忆骨架：它们共享同一套逐特征步长适应器，但误差的来源、target 对参数的依赖以及梯度的含义已经改变。**TIDBD 中的 TD，增加的是 temporal-difference 学习问题；到了 TIDBD($\lambda$)，才再增加跨时间分配 credit 的资格迹。**
+第一支箭头改变的是**学习信号**；第二支箭头才新增**跨时间的 credit assignment**。因此，“TIDBD(0) = IDBD + TD error”可以作为记忆骨架，但不能理解成只替换一个符号。
 
 “每个 feature 有自己的 $\alpha_i$”不只是记号变化。TIDBD 原论文在 Mountain Car 预测实验中同时加入任务相关特征与随机噪声特征：相关特征的步长随学习明显增大，而无关特征的步长保持在较小水平。这给出了一个很直观的结果——独立步长适应也在进行一种简单的 representation learning。[3]
 
