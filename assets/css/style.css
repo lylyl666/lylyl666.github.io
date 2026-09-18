@@ -654,6 +654,58 @@ img {
   text-align: center;
 }
 
+/* Academic-style three-line tables: top rule, header rule, bottom rule. */
+.post-content table {
+  width: 100%;
+  margin: 1.5em 0 2em;
+  color: var(--text-soft);
+  background: transparent;
+  border-top: 2px solid var(--text);
+  border-right: 0;
+  border-bottom: 2px solid var(--text);
+  border-left: 0;
+  border-collapse: collapse;
+  font-family: Inter, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.post-content table caption {
+  margin-bottom: 0.7em;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.post-content table thead {
+  border-bottom: 1px solid var(--text);
+}
+
+.post-content table th,
+.post-content table td {
+  padding: 0.72em 0.9em;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.post-content table th {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.post-content table var {
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05em;
+  white-space: nowrap;
+}
+
+.post-content table sub {
+  font-size: 0.72em;
+}
+
 blockquote {
   margin: 28px 0;
   padding: 16px 20px;
@@ -848,6 +900,15 @@ pre code {
 
   .post-content h2 {
     font-size: 1.45rem;
+  }
+
+  .post-content table {
+    font-size: 0.86rem;
+  }
+
+  .post-content table th,
+  .post-content table td {
+    padding: 0.62em 0.48em;
   }
 
   .footer-inner {

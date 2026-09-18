@@ -751,29 +751,30 @@ $$
 
 这时三个量各有一个明确角色，不能因为它们都带下标 $i$ 就混在一起：
 
-<table>
+<table class="three-line-table">
+  <caption>表 1：TIDBD(λ) 中三个量的分工</caption>
   <thead>
     <tr>
-      <th>符号</th>
-      <th>名称</th>
-      <th>它回答的问题</th>
+      <th scope="col">符号</th>
+      <th scope="col">名称</th>
+      <th scope="col">它回答的问题</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>$x_{i,t}$</td>
+      <td><var>x<sub>i,t</sub></var></td>
       <td>当前特征</td>
-      <td>当前状态的预测依赖 $w_i$ 多少？</td>
+      <td>当前状态的预测依赖 <var>w<sub>i</sub></var> 多少？</td>
     </tr>
     <tr>
-      <td>$z_{i,t}$</td>
+      <td><var>z<sub>i,t</sub></var></td>
       <td>资格迹</td>
-      <td>这次 TD error 应给过去的 $w_i$ 分配多少 credit？</td>
+      <td>这次 TD error 应给过去的 <var>w<sub>i</sub></var> 分配多少 credit？</td>
     </tr>
     <tr>
-      <td>$h_{i,t}$</td>
+      <td><var>h<sub>i,t</sub></var></td>
       <td>步长敏感度</td>
-      <td>过去稍微调整 $\beta_i$，现在的 $w_i$ 会怎样变化？</td>
+      <td>过去稍微调整 <var>β<sub>i</sub></var>，现在的 <var>w<sub>i</sub></var> 会怎样变化？</td>
     </tr>
   </tbody>
 </table>
