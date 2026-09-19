@@ -713,18 +713,22 @@ h_{i,t+1}
 \end{aligned}
 $$
 
-最后把算法演进压缩成一条线：
+最后把算法演进压缩成两步：
 
-$$
-\begin{aligned}
-\boxed{\text{IDBD}}
-&\xrightarrow{\text{监督标签换成 bootstrap target}}
-\boxed{\text{TIDBD}(0)},\\[4pt]
-\boxed{\text{TIDBD}(0)}
-&\xrightarrow{\text{加入资格迹 }\mathbf z_t}
-\boxed{\text{TIDBD}(\lambda)}.
-\end{aligned}
-$$
+<div class="algorithm-evolution" role="img" aria-label="IDBD 将监督标签换成 bootstrap target 后成为 TIDBD(0)；TIDBD(0) 加入资格迹 z 后成为 TIDBD(lambda)">
+  <div class="algorithm-node">IDBD</div>
+  <div class="algorithm-step">
+    <span class="algorithm-step-label">监督标签换成 bootstrap target</span>
+    <span class="algorithm-arrow" aria-hidden="true"></span>
+  </div>
+  <div class="algorithm-node">TIDBD(0)</div>
+  <div class="algorithm-node">TIDBD(0)</div>
+  <div class="algorithm-step">
+    <span class="algorithm-step-label">加入资格迹 <var>z<sub>t</sub></var></span>
+    <span class="algorithm-arrow" aria-hidden="true"></span>
+  </div>
+  <div class="algorithm-node">TIDBD(λ)</div>
+</div>
 
 第一支箭头改变的是**学习信号**；第二支箭头才新增**跨时间的 credit assignment**。因此，“TIDBD(0) = IDBD + TD error”可以作为记忆骨架，但不能理解成只替换一个符号。
 
