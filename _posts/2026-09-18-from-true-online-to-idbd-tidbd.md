@@ -167,7 +167,7 @@ $$
 >
 > 如果只逐项阅读 Dutch trace 的公式，我很容易把它记成“旧 trace 衰减、加入新 feature、再减去一个 correction”，却不容易理解为什么 correction 恰好是这个内积形式。我后来发现，把这些量画成参数空间中的向量会直观得多：先沿当前特征方向分解历史向量，再观察在线更新究竟改变哪一个分量。这样，内积、外积矩阵和修正项不再是三件分散的事情，而是在描述同一个几何过程。
 
-这个视角并不是要用图代替推导，而是给代数式提供一个可以在脑中保持的图像。它还会立即排除一个常见误解：Dutch trace 并不是把整个历史向量统一缩小，而是只对**与当前特征方向重叠的部分**做额外调整。
+这个视角并不是要用图代替推导，而是给代数式提供一个可以在脑中保持的图像。它还会立即排除一个常见误解：<span style="color:#d1242f"><strong>Dutch trace 并不是把整个历史向量统一缩小，而是只对与当前特征方向重叠的部分做额外调整。</strong></span>
 
 因此，我不再先盯着公式中的三个加减项，而是先问：**过去留在参数空间中的向量，哪些部分能改变当前预测？**
 
@@ -347,7 +347,7 @@ $$
 \boxed{d_t\doteq Q_t-Q_{\mathrm{old}}}
 $$
 
-就是上一轮在线更新造成的 prediction drift。例如 $Q_{\mathrm{old}}=0.50$、$Q_t=0.69$ 时，$d_t=0.19$。这里比较的是同一个状态—动作对在两套参数下的预测，不是当前 Q 与下一状态 Q 的差。
+就是上一轮在线更新造成的 prediction drift。例如 $Q_{\mathrm{old}}=0.50$、$Q_t=0.69$ 时，$d_t=0.19$。<span style="color:#d1242f"><strong>这里比较的是同一个状态—动作对在两套参数下的预测，不是当前 Q 与下一状态 Q 的差。</strong></span>
 
 ### 3.2 把 TD error 改写到旧预测基准上
 
@@ -503,7 +503,7 @@ h_1=\frac{\partial w_1}{\partial\beta_0}
 }.
 $$
 
-所以 $h_1>0$ 是说“这一轮的步长如果稍大，得到的 $w_1$ 就会稍大”。它**不是 overshoot 检测器**：单看 $h$ 无法判断学习率设得是否合适。
+所以 $h_1>0$ 是说“这一轮的步长如果稍大，得到的 $w_1$ 就会稍大”。<span style="color:#d1242f"><strong>它不是 overshoot 检测器：单看 </strong>$h$<strong> 无法判断学习率设得是否合适。</strong></span>
 
 ### 5.2 要把 $h_i$ 和当前误差放在一起看
 
@@ -663,7 +663,7 @@ $$
 
 ### 7.3 在 $\lambda=0$ 时，哪些式子变了，哪些没变？
 
-先抓住一句话：**从 IDBD 到 TIDBD(0)，替换的是误差 $\delta_t$ 的来源，而不是整套逐特征步长适应器。**
+先抓住一句话：<span style="color:#d1242f"><strong>从 IDBD 到 TIDBD(0)，替换的是误差 </strong>$\delta_t$<strong> 的来源，而不是整套逐特征步长适应器。</strong></span>
 
 两种误差可以直接对照。IDBD 的 target 是外部给定的标签：
 
@@ -881,7 +881,7 @@ $$
 \underbrace{\Delta\beta_i=\theta\delta_tx_{i,t}h_{i,t}}_{\text{衡量当前 TD 预测误差对步长参数的敏感度}}.
 $$
 
-直接 meta-gradient 中的 $x_{i,t}$ 来自当前预测 $\mathbf w_t^\top\mathbf x_t$ 对 $w_i$ 的导数；$h_{i,t}$ 则是 $w_i$ 对 $\beta_i$ 的敏感度。$z_i$ 并没有和步长适应无关：它进入 $h_{i,t+1}$，然后**间接影响未来的** $\beta_i$ 更新。
+直接 meta-gradient 中的 $x_{i,t}$ 来自当前预测 $\mathbf w_t^\top\mathbf x_t$ 对 $w_i$ 的导数；$h_{i,t}$ 则是 $w_i$ 对 $\beta_i$ 的敏感度。<span style="color:#d1242f">$z_i$<strong> 并没有和步长适应无关：它进入 </strong>$h_{i,t+1}$<strong>，然后间接影响未来的 </strong>$\beta_i$<strong> 更新。</strong></span>
 
 ### 8.4 实际算法中的更新顺序
 
