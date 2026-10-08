@@ -1,0 +1,78 @@
+[
+  {
+    "asset": "swifttd-atari-predictions.png",
+    "source_pdf": "https://rlj.cs.umass.edu/2024/papers/RLJ_RLC_2024_111.pdf",
+    "source_pdf_sha256": "511ccc450d4711939f11cfeeba2535c0b29bd115b3fd4a564dbd5e1940ac5d27",
+    "figure": 1,
+    "pdf_page": 2,
+    "crop_box_points": [
+      88,
+      70,
+      525,
+      267
+    ],
+    "dpi": 300,
+    "size_pixels": [
+      1822,
+      822
+    ],
+    "processing": "Rendered original PDF figure; cropped page margins and surrounding prose. No redrawing or changes to plotted data, labels, or colors.",
+    "asset_sha256": "85283afee512223c11bae8489a7ed681fb29cb3413923b412d77dadcc76f01e9",
+    "authors": [
+      "Khurram Javed",
+      "Arsalan Sharifnassab",
+      "Richard S. Sutton"
+    ]
+  },
+  {
+    "asset": "swifttd-bound-decay-comparison.png",
+    "source_pdf": "https://rlj.cs.umass.edu/2024/papers/RLJ_RLC_2024_111.pdf",
+    "source_pdf_sha256": "511ccc450d4711939f11cfeeba2535c0b29bd115b3fd4a564dbd5e1940ac5d27",
+    "figure": 5,
+    "pdf_page": 10,
+    "crop_box_points": [
+      88,
+      67,
+      525,
+      205
+    ],
+    "dpi": 300,
+    "size_pixels": [
+      1822,
+      576
+    ],
+    "processing": "Rendered original PDF figure; cropped page margins and surrounding prose. No redrawing or changes to plotted data, labels, or colors.",
+    "asset_sha256": "f82cfa735edb48146aecfda04c4bc4c8420ddbd09327a6025958974a3d0a8015",
+    "authors": [
+      "Khurram Javed",
+      "Arsalan Sharifnassab",
+      "Richard S. Sutton"
+    ]
+  },
+  {
+    "asset": "swift-sarsa-control-parameter-sensitivity.png",
+    "source_pdf": "https://arxiv.org/pdf/2507.19539v1",
+    "source_pdf_sha256": "ee459bad4efce41b6c54a554915e793d41b944672ba147b927d1291aaf119cdc",
+    "figure": 1,
+    "pdf_page": 4,
+    "crop_box_points": [
+      42,
+      67,
+      575,
+      289
+    ],
+    "dpi": 300,
+    "size_pixels": [
+      2221,
+      926
+    ],
+    "processing": "Rendered original PDF figure; cropped page margins and surrounding prose. No redrawing or changes to plotted data, labels, or colors.",
+    "asset_sha256": "2fe4d14f3cf50ad2a7b75d66895c791ab07a2dbd7e0eb8f09f0ad7295b51fa93",
+    "authors": [
+      "Khurram Javed",
+      "Richard S. Sutton"
+    ],
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/"
+  }
+]
