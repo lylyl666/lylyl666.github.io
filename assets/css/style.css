@@ -9,6 +9,8 @@
   --accent: #67c4a5;
   --accent-hover: #82d8bb;
   --accent-soft: rgba(103, 196, 165, 0.12);
+  --key-point-color: #ffb4ab;
+  --key-point-bg: rgba(255, 180, 171, 0.07);
   --code-bg: #121418;
   --shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
   --page-width: 1180px;
@@ -27,6 +29,8 @@
   --accent: #28896b;
   --accent-hover: #176f55;
   --accent-soft: rgba(40, 137, 107, 0.1);
+  --key-point-color: #b42332;
+  --key-point-bg: rgba(180, 35, 50, 0.05);
   --code-bg: #22272e;
   --shadow: 0 14px 36px rgba(43, 57, 68, 0.1);
   color-scheme: light;
@@ -632,6 +636,44 @@ img {
 .post-content a {
   text-decoration: underline;
   text-underline-offset: 0.18em;
+}
+
+.post-content .key-point {
+  margin-block: 1.8em;
+  padding: 1em 1.15em;
+  color: var(--text);
+  background: var(--key-point-bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--key-point-color);
+  border-radius: 0 8px 8px 0;
+}
+
+.post-content .key-point p {
+  margin-block: 0.65em;
+}
+
+.post-content .key-point > :first-child {
+  margin-top: 0;
+}
+
+.post-content .key-point > :last-child {
+  margin-bottom: 0;
+}
+
+.post-content .key-point-label {
+  color: var(--key-point-color);
+  font-family: Inter, "Noto Sans SC", sans-serif;
+  font-size: 0.85em;
+  font-weight: 700;
+}
+
+.post-content .key-point strong {
+  color: var(--key-point-color);
+}
+
+.post-content .key-point-detail {
+  color: var(--text-soft);
+  font-size: 0.94em;
 }
 
 .post-content img {
