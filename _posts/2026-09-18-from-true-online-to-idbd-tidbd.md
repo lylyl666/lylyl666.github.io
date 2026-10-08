@@ -1,7 +1,6 @@
 ---
 layout: post
-title: "从 True Online Sarsa(λ) 到 IDBD 与 TIDBD：从正确分配 credit 到学习学习率"
-title_html: "从 True Online Sarsa(λ) 到 IDBD 与 TIDBD：从正确分配 credit 到学习学习率"
+title: "从 True Online Sarsa(λ) 到 IDBD 与 TIDBD"
 date: 2026-09-18 13:49:00 +0800
 categories: [Reinforcement Learning]
 tags: [Sarsa, true-online, dutch-trace, IDBD, TIDBD, meta-learning]
@@ -9,7 +8,7 @@ series: "强化学习基础"
 math: true
 ---
 
-> 上一篇[《从表格 Sarsa 到 True Online Sarsa(λ)》](https://lylyl666.github.io/posts/from-tabular-sarsa-to-true-online-sarsa/)停在了一个问题：**传统 accumulating trace 只显式记录历史梯度按 $\gamma\lambda$ 的衰减，为什么无法在一般有限步长下精确复现 online forward view？**
+> 上一篇[《从表格 Sarsa 到 True Online Sarsa(λ)》]({{ '/posts/from-tabular-sarsa-to-true-online-sarsa/' | relative_url }})停在了一个问题：**传统 accumulating trace 只显式记录历史梯度按 $\gamma\lambda$ 的衰减，为什么无法在一般有限步长下精确复现 online forward view？**
 >
 > 这一篇先补上这个问题的答案：Dutch trace 和 $Q_{\mathrm{old}}$ correction。然后沿着一个新问题继续：**既然参数已经能够正确地在线更新，为什么仍要给所有 feature 指定同一个学习率？学习率本身能不能学习？** 这就把我们带到 IDBD 和 TIDBD。
 
@@ -46,8 +45,6 @@ $$
 ### 1.1 记号约定
 
 沿用 Sutton & Barto 的习惯：$S_t,A_t,R_{t+1}$ 表示状态、动作、奖励；$\mathbf w_t$ 为参数向量；$\mathbf x_t$ 为特征；$\mathbf z_t$ 为资格迹；$\delta_t$ 为 TD error；$\gamma$ 为折扣率；$\lambda$ 控制 trace 的时间衰减。$i$ 表示第 $i$ 个特征坐标，不表示时间。
-
-正文与解释图统一采用这套记号。[5] IDBD/TIDBD 额外引入的 $\beta_i,\alpha_i,h_{i,t}$ 与 meta-step-size $\theta$ 会在后文定义；TIDBD 原论文中的特征 $\boldsymbol\phi(S_t)$ 和敏感度 $H_i$，在本文分别写作 $\mathbf x(S_t)$ 和 $h_i$。[3]
 
 前半篇讨论 **Sarsa 动作价值**，此时
 
@@ -162,11 +159,17 @@ $$
 }.
 $$
 
-其中 $\mathbf z_{t-1}^\top\mathbf x_t$ 表示过去资格与当前特征的**带符号重叠**：内积为正，说明大致同向；为零，说明正交；为负，则说明有反向分量。**“避免重复记账”是直觉；在线更新如何传播历史影响，才是上面代数推导的来源。**
+其中 $\mathbf z_{t-1}^\top\mathbf x_t$ 表示过去资格与当前特征的**带符号重叠**：内积为正，说明大致同向；为零，说明正交；为负，则说明含有反向分量。**“避免重复记账”是直觉；在线更新如何传播历史影响，才是上面代数推导的来源。**
 
-### 2.4 换一个坐标系：把历史 credit 分成平行与垂直两部分
+### 2.4 我的理解方式：把抽象公式还原成向量几何
 
-这次我真正觉得 Dutch trace 好理解，是因为换了一个问题：不再先盯着公式中的三个加减项，而是问：**过去留在参数空间中的向量，哪些部分能改变当前预测？**
+> **我的理解方式：先看方向，再看系数。**
+>
+> 如果只逐项阅读 Dutch trace 的公式，我很容易把它记成“旧 trace 衰减、加入新 feature、再减去一个 correction”，却不容易理解为什么 correction 恰好是这个内积形式。我后来发现，把这些量画成参数空间中的向量会直观得多：先沿当前特征方向分解历史向量，再观察在线更新究竟改变哪一个分量。这样，内积、外积矩阵和修正项不再是三件分散的事情，而是在描述同一个几何过程。
+
+这个视角并不是要用图代替推导，而是给代数式提供一个可以在脑中保持的图像。它还会立即排除一个常见误解：Dutch trace 并不是把整个历史向量统一缩小，而是只对**与当前特征方向重叠的部分**做额外调整。
+
+因此，我不再先盯着公式中的三个加减项，而是先问：**过去留在参数空间中的向量，哪些部分能改变当前预测？**
 
 当前预测是 $\mathbf w^\top\mathbf x_t$。假如某次历史学习留下参数扰动 $\Delta\mathbf w$，它对当前预测的影响恰好是：
 
@@ -188,6 +191,9 @@ $$
 - $\Delta\mathbf w_{\parallel}$：沿当前特征方向的分量，**能够改变当前预测**。
 - $\Delta\mathbf w_{\perp}$：与当前特征正交的分量，**不改变这一次预测**；但它可能影响其他状态—动作的预测，并不是无用信息。
 
+![向量在一维子空间上的正交投影与正交残差]({{ '/assets/images/orthogonal-projection-one-dimensional-subspace.jpg' | relative_url }})
+<p class="figure-caption">图 1：向量在一维子空间上的正交投影。左图的 $\pi_U(\mathbf x)$ 是沿基向量 $\mathbf b$ 的平行分量，红色虚线是与该子空间正交的残差；右图用 $\cos\omega$ 与 $\sin\omega$ 展示同一分解。图源：Deisenroth、Faisal 与 Ong，《Mathematics for Machine Learning》（2020），Figure 3.10 [5]。</p>
+
 现在看之前出现的矩阵乘积：
 
 $$
@@ -198,7 +204,7 @@ $$
 \end{aligned}
 $$
 
-这一步是几何解释的关键：**$\mathbf x_t\mathbf x_t^\top$ 会消去垂直分量，只留下平行分量，并乘上 $\|\mathbf x_t\|^2$。** 严格来说，真正的正交投影矩阵是 $\mathbf x_t\mathbf x_t^\top/\|\mathbf x_t\|^2$；不应直接把 $\mathbf x_t\mathbf x_t^\top$ 称作投影矩阵，除非 $\|\mathbf x_t\|=1$。
+这一步是几何解释的关键：**$\mathbf x_t\mathbf x_t^\top$ 会消去垂直分量，只留下平行分量，并乘上 $\|\mathbf x_t\|^2$。** 严格来说，真正的正交投影矩阵是 $\mathbf x_t\mathbf x_t^\top/\|\mathbf x_t\|^2$；不应直接把 $\mathbf x_t\mathbf x_t^\top$ 称作投影矩阵，除非 $\|\mathbf x_t\|=1$。[5]
 
 把这个结果代回历史扰动的传播式：
 
@@ -223,7 +229,7 @@ $$
 \mathbf z_{t-1}=\mathbf z_{t-1,\parallel}+\mathbf z_{t-1,\perp},
 $$
 
-其中平行、垂直都**相对于当前的 $\mathbf x_t$**，而不是相对于上一时刻的 $\mathbf x_{t-1}$ 定义。于是：
+其中平行、垂直都**相对于当前的 $\mathbf x_t$** 定义，而不是相对于上一时刻的 $\mathbf x_{t-1}$。于是：
 
 $$
 \begin{aligned}
@@ -238,15 +244,12 @@ $$
 
 **这比“旧 trace + 新 feature − 一个修正项”更直观：** 当前特征方向上，历史资格已经参与改变当前预测，所以需要按在线更新的传播关系重新调整；与当前特征正交的历史资格，在这一步并未改变当前预测，因而不受该矩阵额外修正，仍只按 $\gamma\lambda$ 衰减。
 
-还有一个容易忽略的细节：$\mathbf x_t$ 本身就在平行方向上。因此 Dutch trace 的**最终平行分量**是“当前新增 $\mathbf x_t$ + 被调整的历史平行分量”，并不是整个 $\mathbf z_t$ 都乘以 $1-\alpha\|\mathbf x_t\|^2$。例如 $\mathbf z_{t-1}$ 与 $\mathbf x_t$ 正交时，$\mathbf M_t\mathbf z_{t-1}=\mathbf z_{t-1}$，Dutch trace 与 accumulating trace 这一步完全相同。
+还有一个容易忽略的细节：$\mathbf x_t$ 本身就在平行方向上。因此 Dutch trace 的**最终平行分量**是“当前新增 $\mathbf x_t$ + 被调整的历史平行分量”，并不是整个 $\mathbf z_t$ 都乘以 $1-\alpha\|\mathbf x_t\|^2$。例如 $\mathbf z_{t-1}$ 与 $\mathbf x_t$ 正交时，$\mathbf M_t\mathbf z_{t-1}=\mathbf z_{t-1}$，Dutch trace 与 accumulating trace 在这一步完全相同。
 
-我发现通过几何的角度去理解Dutch trace会非常有意思，能够更好地理解整个向量的传递过程，这个对于理解抽象的公式非常有帮助。
+![从向量分解理解 Dutch trace 的完整递推]({{ '/assets/images/dutch-trace-vector-geometry.svg' | relative_url }})
+<p class="figure-caption">图 2：先把历史资格分解为相对当前特征 $\mathbf x_t$ 的平行与垂直分量；$\mathbf M_t$ 只重新缩放平行分量，随后两部分共同乘以 $\gamma\lambda$，最后再加上当前特征。图中画的是 $0<1-\alpha\|\mathbf x_t\|^2<1$ 的常见情形；其他步长下平行分量也可能被消去或反向。这张图表达的是本文作者在整理公式时形成的向量理解，由 AI 辅助绘制，并依据本文推导与符号人工核对；正交投影的几何基础参考 [5]，Dutch trace 递推参考 [1]。</p>
 
-<aside class="key-point" role="note" aria-label="核心结论：Dutch trace 的几何意义">
-  <p class="key-point-label">核心结论 · Dutch trace 的几何意义</p>
-  <p><strong>Dutch trace 的额外矩阵修正只作用于历史资格中与当前特征 $\mathbf x_t$ 平行的分量。</strong></p>
-  <p class="key-point-detail">完整 trace 中，平行与垂直历史分量都乘以 $\gamma\lambda$；其中只有平行部分额外乘以 $1-\alpha\|\mathbf x_t\|^2$，最后再加入当前特征 $\mathbf x_t$。</p>
-</aside>
+对我来说，这个几何视角最大的价值，是把“整个向量被统一缩小”的模糊印象，替换成“历史向量相对当前特征方向分别传播”的具体图像。以后再看到 $\mathbf z_{t-1}^\top\mathbf x_t$，我会先把它读成“历史资格与当前方向有多少带符号重叠”，而不只是一个需要机械计算的内积。
 
 ### 2.6 两维手算：究竟削弱了向量的哪一部分？
 
@@ -300,13 +303,9 @@ $$
 =\begin{bmatrix}1.48\\0.32\end{bmatrix}.
 $$
 
-比较两者：**只有第一个坐标不同，第二个坐标同样是 $0.32$。** 这不是“Dutch trace 把所有历史信用打折”，而是它额外调整了**与本轮特征重叠的那一部分**。
+比较两者：**只有第一个坐标不同，第二个坐标同样是 $0.32$。** 这不是“Dutch trace 把所有历史 credit 打折”，而是它额外调整了**与本轮特征重叠的那一部分**。
 
-此前的一维自检也可以保留：设 $z_{t-1}=x_t=1$、$\gamma\lambda=0.5$、$\alpha=0.5$，传统 trace 给出 $z_t=1.5$，Dutch trace 给出 $z_t=1.25$。这一维例子只有平行方向，所以看不出“垂直部分保持不变”的区别；二维例子恰好补上这一点。
-
-![二维手算的坐标对照：历史资格从 (0.6,0.4) 变为 (0.3,0.4)，最终 Dutch 与 accumulating trace 分别为 (1.24,0.32) 和 (1.48,0.32)]({{ '/assets/images/dutch-trace-two-coordinate-comparison.svg' | relative_url }})
-
-<p class="figure-caption">图 1：按本节数值画出的坐标对照。左图只观察 $\mathbf M_t$ 的作用：第一坐标从 $0.6$ 变为 $0.3$，第二坐标保持 $0.4$。右图完成时间衰减与新增资格后，Dutch trace 和 accumulating trace 的第二坐标同为 $0.32$，第一坐标相差 $0.24$。两幅图使用相同的纵轴刻度；数值来自本节手算，递推依据 [1,5]。本文解释图，AI 辅助绘制。</p>
+此前的一维自检也可以保留：设 $z_{t-1}=x_t=1$、$\gamma\lambda=0.5$、$\alpha=0.5$，传统 trace 给出 $z_t=1.5$，Dutch trace 给出 $z_t=1.25$。一维例子只有平行方向，所以看不出“垂直部分保持不变”的区别；二维例子恰好补上这一点。
 
 ### 2.7 这个视角的适用边界
 
@@ -318,72 +317,126 @@ $$
 4. **这解释了 Dutch trace 的形式，不是完整等价性证明。** 单步更新的扰动传播是精确代数事实；True Online 与 online forward view 的精确等价还需要连同不断变化的 target、参数版本以及后文的 $Q_{\mathrm{old}}$ correction 一起处理。[1]
 
 **我现在的理解是：Dutch trace 不是单纯给历史资格“减一点”，而是先问“历史向量的哪一部分影响了当前预测”，再只对这部分进行由在线更新决定的修正。** 这个向量视角把内积、矩阵 $\mathbf M_t$ 和 Dutch correction 三个看似不同的东西连到了一起。
+
 ---
 
 ## 3. $Q_{\mathrm{old}}$ correction：资格迹改了，为什么参数更新还需要修正？
 
-Dutch trace 改的是**历史资格怎样传播**。还有一个不同的问题：在相邻时间步中，**同一个状态—动作对**可能已经因为参数更新而改变预测。
+Dutch trace 只回答了**历史资格怎样穿过连续的在线更新**，还没有给出完整的权重更新式。缺少的部分来自另一个事实：在相邻两步之间，参数已经更新过，因此**同一个状态—动作对的预测基准也可能变了**。
 
-例如，时刻 $t-1$ 将即将到达的状态—动作对作为 next-Q 计算时，有
+下面分三步看完整式子从哪里来。
 
-$$
-Q_{\mathrm{old}}=0.50.
-$$
+### 3.1 先找出预测基准移动了多少
 
-上一时刻更新 $\mathbf w$ 后，来到当前 $(S_t,A_t)$，重新计算得到
+在时刻 $t-1$，算法已经观察到下一对 $(S_t,A_t)$，但尚未完成上一轮权重更新。把当时的预测保存为
 
 $$
-Q_t=0.69,
-\qquad Q_t-Q_{\mathrm{old}}=0.19.
+Q_{\mathrm{old}}
+=\hat q(S_t,A_t,\mathbf w_{t-1}).
 $$
 
-这里比较的是**同一个 $(S_t,A_t)$、两套参数版本**，不是把当前 Q 与下一状态 Q 相减。$0.19$ 是参数更新造成的 prediction drift。
+上一轮更新完成后，参数变成 $\mathbf w_t$。此时对**同一个** $(S_t,A_t)$ 再预测一次：
 
-![Qold correction：同一状态动作的预测从旧参数下的 0.50 变为新参数下的 0.69]({{ '/assets/images/true-online-q-old-prediction-drift.svg' | relative_url }})
+$$
+Q_t=\hat q(S_t,A_t,\mathbf w_t).
+$$
 
-<p class="figure-caption">图 2：在 episode 内的 $t\ge1$ 时，$Q_{\mathrm{old}}=\mathbf w_{t-1}^\top\mathbf x_t$ 是上一时间步保存的 next-Q，$Q_t=\mathbf w_t^\top\mathbf x_t$ 是本步重新计算的预测。图中的数值来自本节示例；episode 起点的 $Q_{\mathrm{old}}$ 按算法初始化为 $0$。本文解释图，AI 辅助绘制；公式依据 [1,5]。</p>
+两者之差
 
-在线性 True Online Sarsa($\lambda$) 中，完整权重更新可写为
+$$
+\boxed{d_t\doteq Q_t-Q_{\mathrm{old}}}
+$$
+
+就是上一轮在线更新造成的 prediction drift。例如 $Q_{\mathrm{old}}=0.50$、$Q_t=0.69$ 时，$d_t=0.19$。这里比较的是同一个状态—动作对在两套参数下的预测，不是当前 Q 与下一状态 Q 的差。
+
+### 3.2 把 TD error 改写到旧预测基准上
+
+记本轮 Sarsa target 为
+
+$$
+Y_t=R_{t+1}+\gamma
+\hat q(S_{t+1},A_{t+1},\mathbf w_t),
+$$
+
+终止状态的 bootstrap 项取 $0$。通常的 TD error 是
+
+$$
+\delta_t=Y_t-Q_t.
+$$
+
+如果改用上一轮保存的预测 $Q_{\mathrm{old}}$ 作为基准，那么残差为
+
+$$
+\begin{aligned}
+Y_t-Q_{\mathrm{old}}
+&=(Y_t-Q_t)+(Q_t-Q_{\mathrm{old}})\\
+&=\delta_t+d_t.
+\end{aligned}
+$$
+
+所以式子中的 $\delta_t+Q_t-Q_{\mathrm{old}}$ 并不是额外定义的新误差；它只是**把当前 TD error 换回旧预测基准后得到的同一个差值**。
+
+### 3.3 为什么还要减去 $d_t\mathbf x_t$？
+
+严格地说，下面的更新式来自把 online forward view 逐时展开，再用 Dutch trace 消去反复计算得到的 backward view。[1] 这里不重复整段证明，而是利用前面的向量分解说明：**为什么等价式里必然同时出现 $+d_t\mathbf z_t$ 和 $-d_t\mathbf x_t$，而不是只给 TD error 多加一个 $d_t$。**
+
+Dutch trace 可以写成
+
+$$
+\mathbf z_t
+=\underbrace{\mathbf x_t}_{\text{当前资格}}
++\underbrace{(\mathbf z_t-\mathbf x_t)}_{\text{调整后保留下来的历史资格}}.
+$$
+
+$d_t$ 描述的是当前样本到来**之前**，旧参数更新对当前预测造成的漂移。因此它应当补偿已经从过去传来的资格，而不应再次算到刚加入的当前资格 $\mathbf x_t$ 上。于是 correction 是
+
+$$
+\alpha d_t(\mathbf z_t-\mathbf x_t),
+$$
+
+而基本的 TD 更新仍是 $\alpha\delta_t\mathbf z_t$。两者相加，才得到完整更新：
 
 $$
 \boxed{
 \mathbf w_{t+1}
-=\mathbf w_t+\alpha\delta_t\mathbf z_t
+=\mathbf w_t
++\alpha\delta_t\mathbf z_t
 +\alpha(Q_t-Q_{\mathrm{old}})(\mathbf z_t-\mathbf x_t)
 }.
 $$
 
-等价地，
+展开 correction，也可以写成教材伪代码中的形式：
 
 $$
+\boxed{
 \mathbf w_{t+1}
 =\mathbf w_t
 +\alpha(\delta_t+Q_t-Q_{\mathrm{old}})\mathbf z_t
--\alpha(Q_t-Q_{\mathrm{old}})\mathbf x_t.
+-\alpha(Q_t-Q_{\mathrm{old}})\mathbf x_t
+}.
 $$
 
-这里的 TD error 为
+现在两个看似突然出现的项就有了各自的来源：
 
-$$
-\delta_t=R_{t+1}
-+\gamma\hat q(S_{t+1},A_{t+1},\mathbf w_t)
--\hat q(S_t,A_t,\mathbf w_t),
-$$
+- $+(Q_t-Q_{\mathrm{old}})\mathbf z_t$：把预测基准的漂移沿完整资格迹传播；
+- $-(Q_t-Q_{\mathrm{old}})\mathbf x_t$：扣除刚加入的当前资格，避免把过去造成的漂移再记到当前样本一次。
 
-终止状态的 bootstrap 项取 $0$。每次更新前，在旧参数 $\mathbf w_t$ 下先得到下一状态—动作对的预测，并在当前更新后将其保存为下一步使用的 $Q_{\mathrm{old}}$。
+还可以做两个快速自检：当 $Q_t=Q_{\mathrm{old}}$ 时没有 prediction drift，correction 自动消失；当 $\lambda=0$ 时 $\mathbf z_t=\mathbf x_t$，correction 同样消失，更新退回普通的一步 Sarsa。
 
-两项修正的分工可以压缩为：
+因此，两项修正的分工可以压缩为：
 
 - **Dutch trace：** 历史 credit 穿过当前在线更新时应如何累计。
 - **$Q_{\mathrm{old}}$ correction：** 同一个当前预测在两次参数版本之间已经发生多少漂移，如何在更新式中正确补偿。
 
 因此 True Online 的核心不是“让更新更保守”，而是在其线性设置与定义好的 online forward view 下，使高效 backward view 在每个时间点对应 forward view。[1]
 
-<aside class="key-point" role="note" aria-label="核心结论：Dutch trace 与 Qold correction 的分工">
-  <p class="key-point-label">核心结论 · 两项修正的分工</p>
-  <p><strong>Dutch trace 修正历史资格的传播；$Q_{\mathrm{old}}$ correction 补偿同一个预测跨参数版本的漂移。</strong></p>
-  <p class="key-point-detail">前者进入资格迹递推，后者进入权重更新。两项修正共同实现线性设置下与 online forward view 的精确对应。[1,5]</p>
-</aside>
+![19-state Random Walk 上 online 与 offline lambda-return 的性能对比]({{ '/assets/images/online-lambda-return-comparison.jpg' | relative_url }})
+<p class="figure-caption">图 3：19-state Random Walk 上 online λ-return 与 offline λ-return 的比较。左图的 online λ-return 在线性函数近似下可由 True Online TD(λ) 精确、高效地实现；即使评价指标取 episode 结束时的 RMS error，online 方法仍略占优势。图源：Richard S. Sutton、Andrew G. Barto，《Reinforcement Learning: An Introduction》（第 2 版），Figure 12.8。</p>
+
+把 Dutch trace 与 $Q_{\mathrm{old}}$ correction 放回完整的动作价值控制循环，可以得到教材中的 True Online Sarsa($\lambda$) 伪代码：
+
+![True Online Sarsa(lambda) 完整算法]({{ '/assets/images/true-online-sarsa-algorithm.jpg' | relative_url }})
+<p class="figure-caption">图 4：True Online Sarsa(λ) 的完整算法框。资格迹更新中的内积修正对应 Dutch trace；权重更新中的 $Q-Q_{\mathrm{old}}$ 两项负责补偿同一预测跨参数版本的漂移。图源：Richard S. Sutton、Andrew G. Barto，《Reinforcement Learning: An Introduction》（第 2 版），第 307 页。</p>
 
 ---
 
@@ -461,16 +514,6 @@ $$
 $$
 
 若为正，过去使用更大步长所带来的改变与当前希望的更新方向一致；若为负，则相反。因此 IDBD 会依其符号调整学习率。**这只是局部适应信号**：一次反向更新可能源于噪声、目标变化或参数过冲，不能仅凭符号断言已经发生 overshoot。
-
-<aside class="key-point" role="note" aria-label="核心结论：h 的敏感度含义与步长适应信号">
-  <p class="key-point-label">核心结论 · $h_i$ 记录步长敏感度</p>
-  <p><strong>$h_{i,t}$ 记录过去步长选择对当前权重的局部敏感度；调节步长要结合 $\delta_t x_{i,t}h_{i,t}$，不能单看 $h_i$。</strong></p>
-  <p class="key-point-detail">这个乘积是局部适应信号。一次反向信号可能来自噪声、目标变化或参数过冲，不能仅凭符号判定已经发生 overshoot。[2]</p>
-</aside>
-
-![IDBD 的步长适应信号：当前更新方向与过去敏感度同向时增大学习率，反向时减小]({{ '/assets/images/idbd-meta-update-direction.svg' | relative_url }})
-
-<p class="figure-caption">图 3：用 $h_{i,t}>0$ 的两个例子解释 $\delta_t x_{i,t}h_{i,t}$ 的符号。近似 meta-gradient 是 $-\delta_t x_{i,t}h_{i,t}$，因此梯度下降给出带正号的 $\Delta\beta_i=\theta\delta_t x_{i,t}h_{i,t}$。若 $h_{i,t}<0$，同样按照乘积判断，不能只看当前更新方向。本文解释图，AI 辅助绘制；更新式依据 Sutton（1992）[2]，推导见下一节。</p>
 
 ---
 
@@ -570,9 +613,22 @@ $$
 
 ---
 
-## 7. 从 IDBD 到 TIDBD(0)：把固定 target 换成 bootstrap target
+## 7. 从 IDBD 到 TIDBD(0)：到底增加了什么？
 
-前面是监督学习 $\delta_t=y_t-\hat y_t$。TIDBD 把独立步长适应移到 TD learning。这里需要**明确切换任务**：原始 TIDBD 的基本公式是状态价值预测，定义
+先给结论：**TIDBD(0) 没有在 IDBD 上突然增加一套新的步长变量。它保留了 $\beta_i$、$\alpha_i=e^{\beta_i}$ 和敏感度 $h_i$，真正改变的是产生学习信号的任务：从有固定标签的监督预测，变成用下一状态估计值构造 target 的 TD 预测。**
+
+当 $\lambda>0$ 时，算法才会进一步加入资格迹 $z_i$，把一次 TD error 分配给过去访问过的特征；这是下一节的内容。
+
+### 7.1 第一处变化：真实标签变成 bootstrap target
+
+IDBD 在每一步拿到监督目标 $y_t$，误差为
+
+$$
+\delta_t^{\mathrm{IDBD}}
+=y_t-\mathbf w_t^\top\mathbf x_t.
+$$
+
+TD prediction 没有现成的 $y_t$。环境只给出转移 $(S_t,R_{t+1},S_{t+1})$，所以 TIDBD 用“即时奖励 + 下一状态的当前估计”构造 target。原始 TIDBD 的基本公式是状态价值预测，定义
 
 $$
 \hat v(S_t,\mathbf w_t)=\mathbf w_t^\top\mathbf x_t,
@@ -580,19 +636,21 @@ $$
 \mathbf x_t\doteq\mathbf x(S_t).
 $$
 
-TD error 为
+对应的 bootstrap target 和 TD error 分别为
 
 $$
-\boxed{
-\delta_t=R_{t+1}
-+\gamma\mathbf w_t^\top\mathbf x_{t+1}
--\mathbf w_t^\top\mathbf x_t
-}.
+Y_t^{\mathrm{TD}}
+=R_{t+1}+\gamma\mathbf w_t^\top\mathbf x_{t+1},
+\qquad
+\boxed{\delta_t^{\mathrm{TD}}
+=Y_t^{\mathrm{TD}}-\mathbf w_t^\top\mathbf x_t}.
 $$
 
-和监督学习的区别是：$R_{t+1}+\gamma\hat v(S_{t+1},\mathbf w_t)$ 这个 **bootstrap target 本身依赖 $\mathbf w_t$**。
+两者最关键的差别是：$y_t$ 由数据直接给定，而 $Y_t^{\mathrm{TD}}$ 包含 $\mathbf w_t^\top\mathbf x_{t+1}$，会随权重一起移动。
 
-TIDBD 使用 semi-gradient：在本轮优化时把 bootstrap target 视为固定参考，不沿 target 一侧继续求导。因此，结合前面的对角近似，仍采用
+### 7.2 第二处变化：对移动的 target 使用 semi-gradient
+
+如果沿 TD error 的两侧完整求导，下一状态预测也会产生梯度。TIDBD 沿用 TD 学习中的 semi-gradient 选择：本轮更新时把 $Y_t^{\mathrm{TD}}$ 当成暂时固定的参考，只对当前预测 $\mathbf w_t^\top\mathbf x_t$ 求导。结合 IDBD 已经采用的对角近似，有
 
 $$
 \frac{\partial\delta_t}{\partial\beta_i}
@@ -601,21 +659,89 @@ $$
 \boxed{\Delta\beta_i=\theta\delta_tx_{i,t}h_{i,t}}.
 $$
 
-这不是完整 TD-error 平方损失的真实全梯度，而是**semi-gradient meta-update**。它的更新形式接近 IDBD，但优化问题已经变成有 bootstrap target 的 TD prediction。[3]
+这不是 TD-error 平方的完整梯度，而是 **semi-gradient meta-update**。选择它的原因并不是形式更简洁，而是 TIDBD 要适配的正是以 bootstrap target 为学习信号的 TD 更新。[3]
 
-当 $\lambda=0$ 时，$\mathbf z_t=\mathbf x_t$，因此
+### 7.3 在 $\lambda=0$ 时，哪些式子变了，哪些没变？
+
+先抓住一句话：**从 IDBD 到 TIDBD(0)，替换的是误差 $\delta_t$ 的来源，而不是整套逐特征步长适应器。**
+
+两种误差可以直接对照。IDBD 的 target 是外部给定的标签：
 
 $$
-w_{i,t+1}=w_{i,t}+\alpha_i\delta_tx_{i,t}.
+\underbrace{y_t}_{\text{监督标签}}
+\quad\longrightarrow\quad
+\delta_t^{\mathrm{IDBD}}
+=y_t-\hat y_t.
 $$
 
-从**更新形式**上说，TIDBD(0) 可理解为“IDBD + TD error”；但两者的 target 定义、依赖关系及算法性质并不等同。
+TIDBD(0) 则先用奖励和下一状态估计构造 bootstrap target：
+
+$$
+\begin{aligned}
+Y_t^{\mathrm{TD}}
+&=R_{t+1}+\gamma\hat v(S_{t+1},\mathbf w_t),\\
+\delta_t^{\mathrm{TD}}
+&=Y_t^{\mathrm{TD}}-\hat v(S_t,\mathbf w_t).
+\end{aligned}
+$$
+
+真正发生变化的只有下面三层。表中不再放推导公式，只比较概念：
+
+| 变化层次 | IDBD | TIDBD(0) |
+|:---|:---|:---|
+| 样本告诉算法什么 | 当前特征和监督标签 | 当前状态、奖励与下一状态 |
+| target 从哪里来 | 数据直接给定，训练时固定 | 奖励加下一状态预测，会随权重移动 |
+| target 一侧如何求导 | 标签是常量，无须考虑其导数 | 暂时固定 bootstrap target，使用 semi-gradient |
+
+而下面这套**步长适应骨架保持不变**：
+
+- 每个 feature 都有自己的正步长 $\alpha_i=e^{\beta_i}$；
+- 都用 $h_i$ 记录权重对 $\beta_i$ 的近似敏感度；
+- meta-update 的外形仍是 $\Delta\beta_i=\theta\delta_tx_{i,t}h_{i,t}$。
+
+需要注意的是，最后一个式子的外形虽相同，其中 $\delta_t$ 已经从监督残差换成了 TD error。
+
+当 $\lambda=0$ 时还没有跨时间的资格传播，$\mathbf z_t=\mathbf x_t$。所以权重和敏感度仍按当前特征更新：
+
+$$
+\begin{aligned}
+w_{i,t+1}
+&=w_{i,t}+\alpha_i\delta_tx_{i,t},\\
+h_{i,t+1}
+&=h_{i,t}[1-\alpha_ix_{i,t}^2]^+
++\alpha_i\delta_tx_{i,t}.
+\end{aligned}
+$$
+
+最后把算法演进压缩成两步：
+
+<div class="algorithm-evolution" role="img" aria-label="IDBD 将监督标签换成 bootstrap target 后成为 TIDBD(0)；TIDBD(0) 加入资格迹 z 后成为 TIDBD(lambda)">
+  <div class="algorithm-node">IDBD</div>
+  <div class="algorithm-step">
+    <span class="algorithm-step-label">监督标签换成 bootstrap target</span>
+    <span class="algorithm-arrow" aria-hidden="true"></span>
+  </div>
+  <div class="algorithm-node">TIDBD(0)</div>
+  <div class="algorithm-node">TIDBD(0)</div>
+  <div class="algorithm-step">
+    <span class="algorithm-step-label">加入资格迹 <var>z<sub>t</sub></var></span>
+    <span class="algorithm-arrow" aria-hidden="true"></span>
+  </div>
+  <div class="algorithm-node">TIDBD(λ)</div>
+</div>
+
+第一支箭头改变的是**学习信号**；第二支箭头才新增**跨时间的 credit assignment**。因此，“TIDBD(0) = IDBD + TD error”可以作为记忆骨架，但不能理解成只替换一个符号。
+
+“每个 feature 有自己的 $\alpha_i$”不只是记号变化。TIDBD 原论文在 Mountain Car 预测实验中同时加入任务相关特征与随机噪声特征：相关特征的步长随学习明显增大，而无关特征的步长保持在较小水平。这给出了一个很直观的结果——独立步长适应也在进行一种简单的 representation learning。[3]
+
+![TIDBD 为相关与无关特征学习到不同的步长]({{ '/assets/images/tidbd-relevant-irrelevant-feature-step-sizes.jpg' | relative_url }})
+<p class="figure-caption">图 5：TIDBD 在 Mountain Car 预测任务中学到的 feature-specific step sizes。蓝线对应任务相关特征，其步长随 episode 增大；绿线对应随机无关特征，步长基本保持不变。图源：Kearney 等，<em>TIDBD: Adapting Temporal-difference Step-sizes Through Stochastic Meta-descent</em>（2018），Figure 3 [3]。</p>
 
 ---
 
 ## 8. TIDBD($\lambda$)：为什么权重用 $z_i$，步长却用 $x_ih_i$？
 
-当 $\lambda>0$ 时，TIDBD 使用 accumulating eligibility trace：
+从 TIDBD(0) 走到 TIDBD($\lambda$)，这一步才真正新增了状态变量：**资格迹 $z_i$**。原因是当前 TD error 不仅应更新当前特征，还应按照最近访问的程度给过去特征分配 temporal credit。TIDBD 使用 accumulating eligibility trace：
 
 $$
 \boxed{z_{i,t}=\gamma\lambda z_{i,t-1}+x_{i,t}}.
@@ -627,13 +753,35 @@ $$
 \boxed{w_{i,t+1}=w_{i,t}+\alpha_i\delta_tz_{i,t}}.
 $$
 
-这时三个量必须分开：
+这时三个量各有一个明确角色，不能因为它们都带下标 $i$ 就混在一起：
 
-| 量 | 它回答的问题 |
-|---|---|
-| $x_{i,t}$ | 当前状态的预测依赖 $w_i$ 多少？ |
-| $z_{i,t}$ | 这次 TD error 应该给过去的 $w_i$ 分配多少资格？ |
-| $h_{i,t}$ | 过去稍微调整 $\beta_i$，今天的 $w_i$ 将怎样变化？ |
+<table class="three-line-table">
+  <caption>表 1：TIDBD(λ) 中三个量的分工</caption>
+  <thead>
+    <tr>
+      <th scope="col">符号</th>
+      <th scope="col">名称</th>
+      <th scope="col">它回答的问题</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><var>x<sub>i,t</sub></var></td>
+      <td>当前特征</td>
+      <td>当前状态的预测依赖 <var>w<sub>i</sub></var> 多少？</td>
+    </tr>
+    <tr>
+      <td><var>z<sub>i,t</sub></var></td>
+      <td>资格迹</td>
+      <td>这次 TD error 应给过去的 <var>w<sub>i</sub></var> 分配多少 credit？</td>
+    </tr>
+    <tr>
+      <td><var>h<sub>i,t</sub></var></td>
+      <td>步长敏感度</td>
+      <td>过去稍微调整 <var>β<sub>i</sub></var>，现在的 <var>w<sub>i</sub></var> 会怎样变化？</td>
+    </tr>
+  </tbody>
+</table>
 
 ### 8.1 一个两状态的数值例子
 
@@ -680,7 +828,13 @@ $$
 w_{i,t+1}=w_{i,t}+e^{\beta_i}\delta_tz_{i,t}.
 $$
 
-普通 accumulating trace 由输入、$\gamma$、$\lambda$ 递推，本身不显式依赖步长，因此在当前推导中 $\partial z_{i,t}/\partial\beta_i=0$。对 $\beta_i$ 求导并利用乘积法则：
+这里采用的普通 accumulating trace 只由输入、$\gamma$ 和 $\lambda$ 递推，不显式包含步长 $\alpha_i=e^{\beta_i}$。因此在当前推导中
+
+$$
+\frac{\partial z_{i,t}}{\partial\beta_i}=0.
+$$
+
+接下来对 $\beta_i$ 求导并使用乘积法则：
 
 $$
 \begin{aligned}
@@ -729,21 +883,11 @@ $$
 
 直接 meta-gradient 中的 $x_{i,t}$ 来自当前预测 $\mathbf w_t^\top\mathbf x_t$ 对 $w_i$ 的导数；$h_{i,t}$ 则是 $w_i$ 对 $\beta_i$ 的敏感度。$z_i$ 并没有和步长适应无关：它进入 $h_{i,t+1}$，然后**间接影响未来的** $\beta_i$ 更新。
 
-<aside class="key-point" role="note" aria-label="核心结论：TIDBD 的权重更新与步长更新使用不同信号">
-  <p class="key-point-label">核心结论 · TIDBD 的两条更新路线</p>
-  <p><strong>权重更新用 $z_{i,t}$ 分配时间资格；直接步长更新用 $x_{i,t}h_{i,t}$，与当前误差共同形成适应信号。</strong></p>
-  <p class="key-point-detail">$z_{i,t}$ 还进入 $h_{i,t+1}$ 的递推，间接影响未来的 $\beta_i$ 更新；它不会直接替换当前 meta-update 中的 $x_{i,t}$。[3]</p>
-</aside>
-
 ### 8.4 实际算法中的更新顺序
 
 以上推导为突出来源省略了部分临时下标。按 TIDBD 的在线执行顺序，可以这样读：先用当前 $\delta_t,x_{i,t},h_{i,t}$ 更新 $\beta_i$；得到本轮要使用的 $\alpha_i=e^{\beta_i}$；更新 $z_{i,t}$；随后用同一个本轮 $\alpha_i$ 更新 $w_i$ 和 $h_i$。不要把更新前后的 $\beta_i$ 混在一条等号里。[3]
 
 这也说明 **TIDBD 同时存在两条相互耦合的 credit 路线**：$\delta_t\rightarrow\mathbf z_t\rightarrow\mathbf w$ 是 temporal credit；$\delta_t,\mathbf x_t,\mathbf h_t\rightarrow\boldsymbol\beta\rightarrow\boldsymbol\alpha$ 是步长适应；$\mathbf z_t\rightarrow\mathbf h_{t+1}$ 将两者联系起来。
-
-![TIDBD 中 x、z、h 的更新路线：z 更新权重，x 与 h 更新 beta，z 经下一步 h 影响未来 beta]({{ '/assets/images/tidbd-x-z-h-update-paths.svg' | relative_url }})
-
-<p class="figure-caption">图 4：$z_{i,t}$ 直接进入权重更新；$x_{i,t}$ 与 $h_{i,t}$ 直接进入步长参数更新。$z_{i,t}$ 还进入 $h_{i,t+1}$ 的递推，进而影响未来的 $\beta_i$。图中的 $\alpha_i$ 是本轮更新 $\beta_i$ 后得到的步长，$[u]^+=\max(u,0)$。本文解释图，AI 辅助绘制；依据 Kearney 等（2018），Algorithm 1 [3]，已将原论文的 $\phi_i,H_i$ 统一为本文的 $x_i,h_i$。</p>
 
 ---
 
@@ -754,12 +898,13 @@ $$
 3. **$h_i$ 不是判断是否 overshoot 的开关。** 它是过去学习率选择对当前权重的局部敏感度；只有结合当前更新方向才能构成步长适应信号，且信号本身存在噪声。
 4. **$x_i$、$z_i$、$h_i$ 分别回答三个问题。** 当前预测使用谁、过去哪些参数有资格、过去学习率如何影响当前权重。它们不能相互替代。
 5. **对角近似是工程取舍，不是独立性事实。** 它忽略经共享误差传递的跨特征敏感度，用线性规模的状态代替完整敏感度矩阵。
+6. **几何视角不是另一套公式，而是一种阅读公式的方法。** 先确定当前特征定义的方向，再把历史向量分成平行与垂直分量，我就能直接看出内积测量什么、矩阵改变什么，以及为什么 correction 只作用在重叠方向上。这比单独记忆每个代数项更容易形成稳定的理解。
 
 ---
 
 ## 10. 总结与下一步留下的问题
 
-上一篇的悬念已经得到回答：**历史 credit 不仅会随时间衰减，也会穿过不断发生的在线参数更新。** 从向量角度，当前在线更新对历史资格的额外作用集中在与 $\mathbf x_t$ 平行的方向，垂直方向仍只按 $\gamma\lambda$ 衰减；Dutch trace 和 $Q_{\mathrm{old}}$ correction 分别处理资格传播与预测漂移，共同形成 True Online Sarsa($\lambda$)。
+上一篇的悬念已经得到回答：**历史 credit 不仅会随时间衰减，也会穿过不断发生的在线参数更新。** 从向量角度看，当前在线更新对历史资格的额外作用集中在与 $\mathbf x_t$ 平行的方向，垂直方向仍只按 $\gamma\lambda$ 衰减；Dutch trace 和 $Q_{\mathrm{old}}$ correction 分别处理资格传播与预测漂移，共同形成 True Online Sarsa($\lambda$)。
 
 而 IDBD/TIDBD 打开另一层：不只让模型学到合适的权重，还用 meta-gradient 让每个 feature 的步长随数据适应。对 TIDBD($\lambda$)，必须区分当前表示 $\mathbf x$、时间资格 $\mathbf z$、步长敏感度 $\mathbf h$；尤其要理解为什么更新 $w_i$ 用 $\delta z_i$，但直接调整 $\beta_i$ 用 $\delta x_ih_i$。
 
@@ -773,4 +918,4 @@ $$
 2. Sutton, R. S. *Adapting Bias by Gradient Descent: An Incremental Version of Delta-Bar-Delta*. AAAI, 1992. <https://www.incompleteideas.net/papers/sutton-92a.pdf>.
 3. Kearney, A., et al. *TIDBD: Adapting Temporal-difference Step-sizes Through Stochastic Meta-descent*. 2018. <https://arxiv.org/abs/1804.03334>.
 4. Javed, K., Sharifnassab, A., & Sutton, R. S. *SwiftTD: A Fast and Robust Algorithm for Temporal Difference Learning*. 2024. <https://rlj.cs.umass.edu/2024/papers/RLJ_RLC_2024_111.pdf>.
-5. Sutton, R. S., & Barto, A. G. *Reinforcement Learning: An Introduction*. 第 2 版，MIT Press，2018，§12.5–12.7. <http://incompleteideas.net/book/the-book-2nd.html>；[出版社页面](https://mitpress.mit.edu/9780262039246/reinforcement-learning/)。
+5. Deisenroth, M. P., Faisal, A. A., & Ong, C. S. *Mathematics for Machine Learning*. Cambridge University Press, 2020, §3.8. <https://mml-book.github.io/book/mml-book.pdf>.
